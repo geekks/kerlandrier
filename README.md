@@ -34,7 +34,7 @@ L'**agrégation** des événements est l'obstacle principal à la réussite du p
     + Pour éviter de devoir le faire via l'UI Openagenda,
     + Ca fait professionnel.
 
-[Validate locations](/assets/validate_locations.png "Menu d'administration des Lieux")
+![Validate locations](./assets/validate_locations.png "Menu d'administration des Lieux")
 
 ### Import via Google doc
 
@@ -59,6 +59,24 @@ _Demander à une bonne âme un .env_
 $ node import_google_agenda.js
 $ node validation_locations.js
 ```
+
+## `import_google_agenda.js`
+
+### Détails sur la résolution des ambigüités
+
+![alt text](../Kerlandrier/assets/update.png)\
+*Evénement trouvé en auto : Mise à jour auto*
+
+![alt text](../Kerlandrier/assets/prompt.png)\
+*Evénement non trouvé automatiquement dans OA : On interagit avec l'administrateur.*
+
+![Create](../Kerlandrier/assets/create.png "Create")\
+*Evénement non trouvé automatiquement dans OA & l'administrateur souhaite créer l'événement issu de GA* 
+
+![alt text](../Kerlandrier/assets/patch.png)\
+*Evénement non trouvé automatiquement dans OA mais l'administrateur l'a trouvé*
+
+
 
 
 ## Contribuer
