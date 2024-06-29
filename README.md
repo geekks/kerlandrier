@@ -14,7 +14,11 @@ Le [Kerlandrier](https://hentou.cc/tsts/convivialites/) utilise un [calendrier O
 La **mise à disposition** des événements se veut _numérique_ et _physique_. _Numérique_ via la [page web statique du Kerlandrier](https://hentou.cc/tsts/convivialites/).
 _Physique_ via un usage Web2Print qui permet d'imprimer le contenu sur un format papier (A5, A4, A4, A0 pour les plus ambitieux).
 
-L'**agrégation** des événements est l'obstacle principal à la réussite du projet. de faciliter la création et la mise à jour des événéments contenus dans l'Openagenda
+L'**agrégation** des événements est l'obstacle principal à la réussite du projet.
+
+### Freins à l'agrégation
+
+_TO DO_
 
 ## Outils du dépôt
 
@@ -64,16 +68,16 @@ $ node validation_locations.js
 
 ### Détails sur la résolution des ambigüités
 
-![alt text](../Kerlandrier/assets/update.png)\
+![update](./assets/update.png)\
 *Evénement trouvé en auto : Mise à jour auto*
 
-![alt text](../Kerlandrier/assets/prompt.png)\
+![prompt](./assets/prompt.png)\
 *Evénement non trouvé automatiquement dans OA : On interagit avec l'administrateur.*
 
-![Create](../Kerlandrier/assets/create.png "Create")\
+![Create](./assets/create.png "Create")\
 *Evénement non trouvé automatiquement dans OA & l'administrateur souhaite créer l'événement issu de GA* 
 
-![alt text](../Kerlandrier/assets/patch.png)\
+![patch](./assets/patch.png)\
 *Evénement non trouvé automatiquement dans OA mais l'administrateur l'a trouvé*
 
 
