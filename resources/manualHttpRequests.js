@@ -1,11 +1,11 @@
+require('dotenv').config()
 const axios = require("axios");
 
-const API_PUBLIC_KEY = "3a3d28e0bb83460db417941f96dd8991";
-const API_SECRET_KEY = "34bfa3b4862148bdbf0d2345a82ede4b";
-
-const ACCESS_TOKEN_URL = "https://api.openagenda.com/v2/requestAccessToken";
-
-const TBD_LOCATION_UID = "11634941"
+const publicKey = process.env.OA_PUBLIC_KEY;
+const secretKey = process.env.OA_SECRET_KEY;
+const ACCESS_TOKEN_URL = process.env.ACCESS_TOKEN_URL
+const AGENDA_UID = process.env.AGENDA_UID
+// const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID
 
 const retrieveAccessToken = async (apiSecretKey) => {
     const headers = {
@@ -37,7 +37,7 @@ const getLocations = async (accessToken) => {
         "access-token": accessToken,
         "nonce": Date.now(),
     };
-    const url = "https://api.openagenda.com/v2/agendas/44891982/locations";
+    const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/locations`;
 
     try {
         const response = await axios.get(url, { headers });
@@ -59,7 +59,7 @@ const createEvent = async (accessToken, event) => {
         "nonce": Date.now(),
         "data": event,
     };
-    const url = "https://api.openagenda.com/v2/agendas/44891982/events";
+    const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/events`;
     try {
         const eventCreationResponse = await axios.post(url, body, { headers });
 
@@ -78,7 +78,7 @@ const deleteEvent = async (accessToken, eventUid) => {
         "access-token": accessToken,
         "nonce": Date.now(),
     };
-    const url = "https://api.openagenda.com/v2/agendas/44891982/events/" + eventUid.toString();
+    const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/events/` + eventUid.toString();
     try {
         const response = await axios.delete(url, { headers });
         if (response.status >= 200 && response.status <= 299) {
@@ -93,7 +93,7 @@ const deleteEvent = async (accessToken, eventUid) => {
 (async () => {
     console.log("START");
 
-    const accessToken = await retrieveAccessToken(API_SECRET_KEY);
+    const accessToken = await retrieveAccessToken(secretKey);
     if (accessToken) {
         console.log("Access Token: ", accessToken);
 
