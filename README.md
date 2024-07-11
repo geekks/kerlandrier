@@ -18,7 +18,19 @@ L'**agrégation** des événements est l'obstacle principal à la réussite du p
 
 ### Freins à l'agrégation
 
-_TO DO_
+*   Sources d'informations multiples:
+    + Affichage papier
+    + Newsletter de lieux et d'associations
+    + Evénements et posts Facebbok
+    + Sites Web
+    + Bouche à oreille/ Discussions Whatsapp
+*   Blocages techniques à l'automatisation:
+    + Blocage par Facebook du scrap d'infos sur son contenu
+    + Incompatibilités des formats de calendrier ouverts, Google, Apple, ...
+    + Pas de solution simple, open source, trouvée pour faire ce travail
+*   Temps de contribution manuel
+    + La flemme
+
 
 ## Outils du dépôt
 
@@ -56,6 +68,12 @@ $ npm i
 ```
 ### Charger les credentials
 _Demander à une bonne âme un .env_
+
+Pour les secrets Open Agenda (API pub & secret keys):
+*   Créer un compte [Open Agenda](https://openagenda.com/)
+*   Récupérer votre clé publique dans les paramètres de votre compte
+*   Envoyer une demande à support@openagenda.com pour demander votre clé privée (cf https://developers.openagenda.com/00-introduction/#utilisation-en-criture/)
+
 
 ## Utilisation
 
