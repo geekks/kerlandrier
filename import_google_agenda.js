@@ -15,14 +15,35 @@ const AGENDA_UID = process.env.AGENDA_UID
 const gAgendaPrivateUrlAd = process.env.GA_PRIVATE_URL_AD
 const gAgendaPrivateUrlJb = process.env.GA_PRIVATE_URL_JB
 
+const gAgendaSources = { 
+  agendas :[{
+    name: "Adri",
+    value: gAgendaPrivateUrlAd
+  }, {
+    name: "JB",
+    value: gAgendaPrivateUrlJb
+  }]
+}
+
 const oa = new OaSdk({
   publicKey,
   secretKey,
 });
 
 const main = async () => {
+
+  // Select Google Agenda Source
+  const gAgendaSourceQuestion = {
+    type: 'list',
+    name: 'value',
+    message: 'Select source for Private GAgenda',
+    choices: gAgendaSources.agendas
+  }
+  const gAgendaSourceAnswer = await inquirer.prompt(gAgendaSourceQuestion)
+  const gAgendaPrivateUrl= gAgendaSourceAnswer.value; 
+  
   // Pull upcoming events from Google Agenda in Open Agenda schema
-  const newOaEvents = await pullUpcomingGaEvents(gAgendaPrivateUrlAd)
+  const newOaEvents = await pullUpcomingGaEvents(gAgendaPrivateUrl)
   console.log("NewOaEvents - ", newOaEvents.map((e) => e.slug))
 
   // Iterate over upcoming events
@@ -69,11 +90,11 @@ const main = async () => {
           console.log("\t[CREATE] uid", createdEvent.uid);
           uids.push(createdEvent.uid)
         } else {
-        // Patch externe-uid to the oa event
-        console.log("\t[PATCH] Patch existing event - ", oaEventsChoices.find((e) => e.value === answer.uid).name);
+          // Patch externe-uid to the oa event
+          console.log("\t[PATCH] Patch existing event - ", oaEventsChoices.find((e) => e.value === answer.uid).name);
         const patchData = {"uid-externe": newOaEvent["uid-externe"]}
-        const patchedEvent = await patchOaEvent(oa, AGENDA_UID, answer.uid, patchData)
-        console.log("\t[PATCH] uid", patchedEvent.uid);
+          const patchedEvent = await patchOaEvent(oa, AGENDA_UID, answer.uid, patchData)
+          console.log("\t[PATCH] uid", patchedEvent.uid);
         }
       } else {
         // Existing event, update it in case it has changed since creation
