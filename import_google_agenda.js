@@ -60,7 +60,7 @@ const main = async () => {
       const oaEvents = await axios.get(
         `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/events`,
         {
-          params: { key: publicKey, monolingual: "fr", "timings[gte]": isAfter, "timings[lte]": isBefore },
+          params: { key: publicKey, monolingual: "fr", "timings[gte]": isAfter, "timings[lte]": isBefore, "size": 300 },
           headers: { 'Content-Type': 'application/json' }
         }
       )

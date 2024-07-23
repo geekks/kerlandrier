@@ -96,4 +96,4 @@ const slugify = text =>
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
 
-module.exports = { pullUpcomingGaEvents, createOaEvent, updateOaEvent, patchOaEvent, deleteOaEvents }
+module.exports = { pullUpcomingGaEvents, createOaEvent, updateOaEvent, patchOaEvent, deleteOaEvents, slugify }
