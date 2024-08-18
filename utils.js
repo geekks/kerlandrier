@@ -2,7 +2,7 @@ require('dotenv').config()
 
 const moment = require('moment') // for date handling
 const ical = require('node-ical'); // for ical parsing
-
+const strip = require ('string-strip-html');
 const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID 
 
 // Do stuff with ical and GoogleAgenda
@@ -52,13 +52,15 @@ const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
       }
     }
 
+    const noHtmlgaEvent = strip.stripHtml(gaEvent.description ?? "-" ).result;
+
     const newOaEvent = {
       "uid-externe": gaEvent.uid,
       slug: slugify(gaEvent.summary),
       title: { fr: gaEvent.summary },
-      description: { fr: gaEvent.description ?? "-" },
+      description: { fr: `${gaEvent.location}\nImporté depuis ${vCalendar['WR-CALNAME']}` },
       locationUid: TBD_LOCATION_UID,
-      longDescription: { fr: `${gaEvent.location}\nImporté depuis ${vCalendar['WR-CALNAME']}` },
+      longDescription: { fr: noHtmlgaEvent },
       timings
     }
     upcomingGaEvents.push(newOaEvent);
