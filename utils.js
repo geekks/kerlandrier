@@ -5,6 +5,8 @@ const ical = require('node-ical'); // for ical parsing
 const strip = require ('string-strip-html');
 const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID 
 
+const { getCorrespondingOALocation} = require("./resources/getOaLocation")
+
 // Do stuff with ical and GoogleAgenda
 const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
   const upcomingGaEvents = [];
@@ -54,12 +56,14 @@ const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
 
     const noHtmlgaEvent = strip.stripHtml(gaEvent.description ?? "-" ).result;
 
+    // search or create OALocation. Default : "To be Defined"
+    const locationUId= getCorrespondingOALocation(gaEvent.location)
     const newOaEvent = {
       "uid-externe": gaEvent.uid,
       slug: slugify(gaEvent.summary),
       title: { fr: gaEvent.summary },
       description: { fr: `${gaEvent.location}\nImporté depuis ${vCalendar['WR-CALNAME']}` },
-      locationUid: TBD_LOCATION_UID,
+      locationUid: locationUId,
       longDescription: { fr: noHtmlgaEvent },
       timings
     }

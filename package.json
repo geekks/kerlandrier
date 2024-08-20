@@ -5,6 +5,7 @@
     "axios": "^1.7.2",
     "csv-reader": "^1.0.12",
     "dotenv": "^16.4.5",
+    "fuse.js": "^7.0.0",
     "inquirer": "^8.2.6",
     "node-ical": "^0.18.0",
     "string-strip-html": "^8.5.0"
