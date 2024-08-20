@@ -65,7 +65,7 @@ const getLocations = async (accessToken) => {
     try {
         const response = await axios.get(url, { headers });
         if (response.status >= 200 && response.status <= 299) {
-            console.log("Locations Response: ", response.data);
+            // console.log("Locations Response: ", response.data);
             return response.data;
         }
     } catch (exc) {
@@ -166,30 +166,32 @@ const deleteEvent = async (accessToken, eventUid) => {
     }
 }
 
-(async () => {
-    console.log("START");
+module.exports = { retrieveAccessToken, getLocations, postLocation, createEvent, deleteEvent, deleteLocation }
 
-    const accessToken = await retrieveAccessToken(secretKey);
-    if (accessToken) {
-        console.log("Access Token: ", accessToken);
+// (async () => {
+//     console.log("START");
 
-        // const locations = await getLocations(accessToken);
-        // console.log("Locations: ", locations);
-        // const event = {
-        //     title: {fr: "[TEST] Evénement ACN"},
-        //     description: {fr: "Description courte ACN"},
-        //     timings: [
-        //         {
-        //             begin: "2024-06-18T17:00:00+0200",
-        //             end: "2024-06-18T19:00:00+0200"
-        //         }
-        //     ],
-        //     locationUid: TBD_LOCATION_UID,
-        //     attendanceMode: 1
-        // }
-        // await createEvent(accessToken, event)
-        await deleteEvent(accessToken, 38636380)
-    }
+//     const accessToken = await retrieveAccessToken(secretKey);
+//     if (accessToken) {
+//         console.log("Access Token: ", accessToken);
 
-    console.log("END");
-})();
+//         // const locations = await getLocations(accessToken);
+//         // console.log("Locations: ", locations);
+//         // const event = {
+//         //     title: {fr: "[TEST] Evénement ACN"},
+//         //     description: {fr: "Description courte ACN"},
+//         //     timings: [
+//         //         {
+//         //             begin: "2024-06-18T17:00:00+0200",
+//         //             end: "2024-06-18T19:00:00+0200"
+//         //         }
+//         //     ],
+//         //     locationUid: TBD_LOCATION_UID,
+//         //     attendanceMode: 1
+//         // }
+//         // await createEvent(accessToken, event)
+//         await deleteEvent(accessToken, 38636380)
+//     }
+
+//     console.log("END");
+// })();
