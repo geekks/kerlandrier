@@ -73,6 +73,59 @@ const getLocations = async (accessToken) => {
     }
 }
 
+const postLocation = async (accessToken, name, adresse) => {
+    const headers = {
+        "Content-Type": 'application/json',
+        "access-token": accessToken,
+        "nonce": Date.now(),
+    };
+    const body = {
+        name: name,
+        address: adresse,
+        countryCode: "FR",
+        state: 0, // means "not verified"
+    };
+    const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/locations`;
+
+    const response = await axios.post(url, body, { headers })
+        .catch(function (error) {
+            if (error.response) {
+                // Catching OA response
+                if (error.response.status = 400 
+                    && error.response.data.message == "geocoder didn't find address") {
+                    console.error("No existing address found by OA API");
+                    return null;
+                }
+                console.log(error.response.status, error.response.data);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error OA Post location', error);
+            }
+
+        });
+        return response?.data ? response.data : null
+}
+
+const deleteLocation = async (accessToken, locationUid) => {
+    const headers = {
+        "Content-Type": 'application/json',
+        "access-token": accessToken,
+        "nonce": Date.now(),
+    };
+
+    const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/locations/${locationUid}`;
+
+    try {
+        const response = await axios.delete(url, { headers });
+        if (response.status >= 200 && response.status <= 299) {
+            // console.log("Locations Response: ", response.data);
+            return response.data;
+        }
+    } catch (exc) {
+        console.error("Error deleting location: ", exc.response ? exc.response.data : exc.message);
+    }
+}
+
 const createEvent = async (accessToken, event) => {
     const headers = {
         "Content-Type": 'application/json',
