@@ -1,13 +1,30 @@
 require('dotenv').config()
 const axios = require("axios");
+const fs = require('fs');
 
 const publicKey = process.env.OA_PUBLIC_KEY;
 const secretKey = process.env.OA_SECRET_KEY;
 const ACCESS_TOKEN_URL = process.env.ACCESS_TOKEN_URL
 const AGENDA_UID = process.env.AGENDA_UID
+const tokenFilePath = 'secret_token.json';
 // const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID
 
 const retrieveAccessToken = async (apiSecretKey) => {
+
+    // check if token already exist
+    if (fs.existsSync(tokenFilePath)) {
+        const tokenFileContent = await fs.promises.readFile(tokenFilePath, 'utf8');
+        const tokenData = JSON.parse(tokenFileContent);
+
+        if (tokenData.access_token && tokenData.endate && Date.now() - tokenData.endate < 3600000) {
+                // console.log("Using existing access token");
+            const accessToken = tokenData.access_token;
+            return accessToken;
+        }
+    };
+        
+    //else 
+    console.log("Request a new token and save it in secret_token.json");
     const headers = {
         "Content-Type": 'application/json',
     };
@@ -20,7 +37,13 @@ const retrieveAccessToken = async (apiSecretKey) => {
         const oauthResponse = await axios.post(ACCESS_TOKEN_URL, body, { headers });
 
         if (oauthResponse.status >= 200 && oauthResponse.status <= 299) {
-            console.log("OAuth Response: ", oauthResponse.data);
+            // Save token to token.json file
+            const tokenData = {
+                access_token: oauthResponse.data.access_token,
+                endate: Date.now() + 3600000, // 1 hour from now
+            };
+            await fs.promises.writeFile(tokenFilePath, JSON.stringify(tokenData));
+
             return oauthResponse.data.access_token;
         }
     } catch (exc) {
