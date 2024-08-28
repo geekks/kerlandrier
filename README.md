@@ -116,6 +116,7 @@ Le projet dit oui à votre assistance si vous :
 
 *   Convivialités Inc.
 *   Le Jockey
+*   Le [sdk oa](https://github.com/OpenAgenda/oa-public/tree/main/sdk-js)
 
 ### Licence
 
