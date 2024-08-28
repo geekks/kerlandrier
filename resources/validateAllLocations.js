@@ -18,18 +18,19 @@ const oa = new OaSdk({
  *
  * @return {Promise<void>} Resolves when all locations have been validated.
  */
-const validateLocations = async () => {
-  oa.connect();
+(async () => {
+  await oa.connect();
   const locations = await oa.locations.list(AGENDA_UID, { state: 0 });
-  if (locations && locations.length > 1) {
+  console.log("locations - ", locations);
+  if (locations && locations.locations && locations.locations.length > 1) {
     for (const location of locations.locations) {
-      await oa.locations.patch(AGENDA_UID, location.uid, { state: 1 });
-      console.log("Validated location: ", location.name)
+      if (location.state === 0) {
+        await oa.locations.patch(AGENDA_UID, location.uid, { state: 1 });
+        console.log("Validated location: ", location.name)
+      }
     }
-    console.log("Validated locations: ", locations.length)
+    console.log("Validated locations: ", locations.locations.length)
   } else {
     console.log("No locations require validation.")
   }
-}
-
-validateLocations();
+})();
