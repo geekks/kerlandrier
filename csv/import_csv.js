@@ -22,7 +22,7 @@ const oa = new OaSdk({
 });
 
 // from root: node import_csv.js <filename>
-// node import_csv.js 2024_cap_danse.csv
+// node csv/import_csv.js 2024_cap_danse.csv
 const filename = process.argv[2]
 // csv format
 //    0    1       2        3         4        5          6    7     8         9
@@ -50,6 +50,7 @@ const main = async () => {
   try {
     // Format csv data into oa events
     const jsonEvents = await csvToJson();
+    console.log("jsonEvents - ", jsonEvents);
     for (let i = 0; i < jsonEvents.length; i++) {
       const event = jsonEvents[i];
       if (!event.location_uid) {
@@ -100,7 +101,7 @@ const main = async () => {
       }
     }
   } catch (error) {
-    console.error('Error processing CSV:', error.response.data.errors);
+    console.error('Error processing CSV:', error.response);
   } finally {
     console.log("uids - ", uids);
     fs.writeFile(`csv/${filename.split('.')[0]}.txt`, uids.join('\n'), (err) => {
