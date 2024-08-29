@@ -5,13 +5,16 @@ const ical = require('node-ical'); // for ical parsing
 const strip = require ('string-strip-html');
 const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID 
 
-const { getCorrespondingOaLocationFromGa} = require("./resources/getOaLocation")
+const { getCorrespondingOaLocation} = require("./resources/getOaLocation")
 
-// Do stuff with ical and GoogleAgenda
-const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
+/**
+ * Get upcoming events from a remote ics file and return an array of Open Agenda-compatible events
+ * @param {string} icsUrl - url of the ics file
+ * @returns {Promise<Object[]>} - an array of Open Agenda-compatible events
+ */
+const pullUpcomingIcsEvents = async (icsUrl) => {
   const upcomingGaEvents = [];
-  const data = await ical.fromURL(gAgendaPrivateUrlAd);
-  // console.log("data - ", data);
+  const data = await ical.fromURL(icsUrl);
   // Turn data object into an Array to filter based on value.type
   const dataAsArray = Object.entries(data);
 
@@ -33,18 +36,18 @@ const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
   const events = Object.fromEntries(eventsFilter);
 
   for (const eventKey in events) {
-    const gaEvent = data[eventKey];
+    const icsEvent = data[eventKey];
     // Check if start and end are more than 24 h
     const timings = []
-    if (moment(gaEvent.end).diff(moment(gaEvent.start), 'hours') < 24) {
+    if (moment(icsEvent.end).diff(moment(icsEvent.start), 'hours') < 24) {
       timings.push({
-        begin: moment(gaEvent.start).toISOString(),
-        end: moment(gaEvent.end).toISOString()
+        begin: moment(icsEvent.start).toISOString(),
+        end: moment(icsEvent.end).toISOString()
       })
     } else {
       // Split into an array of items that are maximum 24h
-      let begin = moment(gaEvent.start)
-      let end = moment(gaEvent.end)
+      let begin = moment(icsEvent.start)
+      let end = moment(icsEvent.end)
       while (begin.isBefore(end)) {
         timings.push({
           begin: begin.toISOString(),
@@ -54,17 +57,20 @@ const pullUpcomingGaEvents = async (gAgendaPrivateUrlAd) => {
       }
     }
 
-    const noHtmlgaEvent = strip.stripHtml(gaEvent.description ?? "-" ).result;
+    const noHtmlicsEvent = strip.stripHtml(icsEvent.description ?? "-" ).result;
 
     // search or create OALocation. Default : "To be Defined"
-    const locationUId= getCorrespondingOaLocationFromGa(gaEvent.location)
+    // const locationUId= getCorrespondingOaLocation(icsEvent.location)
+    const locationUid = TBD_LOCATION_UID
+
     const newOaEvent = {
-      "uid-externe": gaEvent.uid,
-      slug: slugify(gaEvent.summary),
-      title: { fr: gaEvent.summary },
-      description: { fr: `${gaEvent.location}\nImporté depuis ${vCalendar['WR-CALNAME']}` },
-      locationUid: locationUId,
-      longDescription: { fr: noHtmlgaEvent },
+      "uid-externe": icsEvent.uid,
+      slug: slugify(icsEvent.summary),
+      title: { fr: icsEvent.summary },
+      description: { fr: `${icsEvent.location}` },
+      locationUid: locationUid,
+      locationName: icsEvent.location,
+      longDescription: { fr: noHtmlicsEvent },
       timings
     }
     upcomingGaEvents.push(newOaEvent);
@@ -102,4 +108,4 @@ const slugify = text =>
     .replace(/[^\w-]+/g, '')
     .replace(/--+/g, '-')
 
-module.exports = { pullUpcomingGaEvents, createOaEvent, updateOaEvent, patchOaEvent, deleteOaEvents, slugify }
+module.exports = { pullUpcomingIcsEvents, createOaEvent, updateOaEvent, patchOaEvent, deleteOaEvents, slugify }

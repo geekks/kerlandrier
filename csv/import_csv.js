@@ -7,7 +7,7 @@ const csv = require('csv-parser');
 const { slugify } = require('../utils');
 
 const { createOaEvent } = require("../utils");
-const { getCorrespondingOaLocationFromGa, matchGaOaLocations } = require("../resources/getOaLocation")
+const { getCorrespondingOaLocation, matchOaLocations } = require("../resources/getOaLocation")
 
 require('dotenv').config()
 // OpenAgenda creds
@@ -53,7 +53,7 @@ const main = async () => {
     for (let i = 0; i < jsonEvents.length; i++) {
       const event = jsonEvents[i];
       if (!event.location_uid) {
-        const OaLocationUid = await getCorrespondingOaLocationFromGa(event.location_name)
+        const OaLocationUid = await getCorrespondingOaLocation(event.location_name)
         event.location_uid = OaLocationUid
       }
       csvEvents.push({

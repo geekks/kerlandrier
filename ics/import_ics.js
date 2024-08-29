@@ -5,52 +5,31 @@ const moment = require('moment') // for date handling
 const axios = require("axios"); // for http requests
 const inquirer = require("inquirer") // deprecated version, should use import but mess up with other require
 
-const { pullUpcomingGaEvents, createOaEvent, updateOaEvent, patchOaEvent } = require("./utils")
+const { pullUpcomingIcsEvents, createOaEvent, updateOaEvent, patchOaEvent } = require("../utils")
+const { getCorrespondingOaLocation } = require("../resources/getOaLocation")
 
 // OpenAgenda creds
 const publicKey = process.env.OA_PUBLIC_KEY;
 const secretKey = process.env.OA_SECRET_KEY;
 const AGENDA_UID = process.env.AGENDA_UID
-// Google agenda creds
-const gAgendaPrivateUrlAd = process.env.GA_PRIVATE_URL_AD
-const gAgendaPrivateUrlJb = process.env.GA_PRIVATE_URL_JB
 
-const gAgendaSources = { 
-  agendas :[{
-    name: "Adri",
-    value: gAgendaPrivateUrlAd
-  }, {
-    name: "JB",
-    value: gAgendaPrivateUrlJb
-  }]
-}
 
-const oa = new OaSdk({
-  publicKey,
-  secretKey,
-});
+const importIcs = async (icsUrl) => {
+  const oa = new OaSdk({
+    publicKey,
+    secretKey,
+  });
 
-const main = async () => {
-
-  // Select Google Agenda Source
-  const gAgendaSourceQuestion = {
-    type: 'list',
-    name: 'value',
-    message: 'Select source for Private GAgenda',
-    choices: gAgendaSources.agendas
-  }
-  const gAgendaSourceAnswer = await inquirer.prompt(gAgendaSourceQuestion)
-  const gAgendaPrivateUrl= gAgendaSourceAnswer.value; 
-  
   // Pull upcoming events from Google Agenda in Open Agenda schema
-  const newOaEvents = await pullUpcomingGaEvents(gAgendaPrivateUrl)
-  console.log("NewOaEvents - ", newOaEvents.map((e) => e.slug))
+  const newOaEvents = await pullUpcomingIcsEvents(icsUrl)
 
   // Iterate over upcoming events
   const uids = []
   for (const newOaEvent of newOaEvents) {
     console.log("\n======== Scanning newOaEvent ========");
     console.log(newOaEvent.title);
+    const locationResult = await getCorrespondingOaLocation(newOaEvent.locationName)
+    console.log("locationResult - ", locationResult);
     try {
       // For each upcoming event, check if it already exists in Open Agenda
       // The key is the "uid-externe" but the API does not allow to filter on it
@@ -66,7 +45,7 @@ const main = async () => {
       )
       // Check if an existing oa event is there with the same "uid-externe"
       const oaEvent = oaEvents.data.events.find(event => event["uid-externe"] === newOaEvent["uid-externe"]);
-      if (!oaEvent) {
+      if (!oaEvent && oaEvents && oaEvents.data.events.length > 0) {
         // Prompt the user to select an existing event or create a new one
         const oaEventsChoices = oaEvents.data.events.map((e) => {
           return {
@@ -96,18 +75,32 @@ const main = async () => {
           const patchedEvent = await patchOaEvent(oa, AGENDA_UID, answer.uid, patchData)
           console.log("\t[PATCH] uid", patchedEvent.uid);
         }
-      } else {
-        // Existing event, update it in case it has changed since creation
+      } else if (oaEvent) {
+        // // Option 1: SIMPLE - Existing event, do nothing. We trust first import only
+        // console.log("\t[SKIP] Skip existing event - ", oaEvent.title);
+         // Option 2: RISKY - Existing event, update it in case it has changed since creation. We trust ics live source.
         console.log("\t[UPDATE] Update existing event - ", oaEvent.title);
         const updatedEvent = await updateOaEvent(oa, AGENDA_UID, oaEvent.uid, newOaEvent)
         console.log("\t[UPDATE] uid", updatedEvent.uid);
         uids.push(updatedEvent.uid)
+      } else {
+        // Default: Create the event because nothing seems to be there
+        console.log("\t[CREATE] Create new event")
+        const createdEvent = await createOaEvent(oa, AGENDA_UID, newOaEvent)
+        console.log("\t[CREATE] uid", createdEvent.uid);
+        uids.push(createdEvent.uid)
       }
     } catch (err) {
-      console.log("Error: ", err);
+      if (err.response.data.errors) {
+        console.log("Error: ", err.response.data.errors);
+      } else {
+        console.log("Error: ", err);
+      
+      }
     }
   }
   console.log("uids - ", uids) // Re-user ids for further update, delete...
 }
 
-main()
+module.exports = { importIcs }
+

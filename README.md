@@ -34,9 +34,9 @@ L'**agrégation** des événements est l'obstacle principal à la réussite du p
 
 ## Outils du dépôt
 
-### Import via Google Agenda
+### Import via ICS (export Google Agenda, Facebook events...)
 
-*   Importer les événements d'un Google Agenda (`.ical`) à partir de son URL > `import_google_agenda.js`
+*   Importer les événements d'un Google Agenda (`.ical`) à partir de son URL > `import_ics.js`
     + Si aucune complication, l'événement Openagenda est créé et une valeur `uid-externe` est mise à jour
     + Si un événement avec le même `uid-externe` est trouvé dans Openagenda, on fait une mise à jour (à débattre, on pourrait aussi ne rien faire)
     + S'il existe des événements dans la même plage de date, on interagit avec l'administrateur
@@ -59,13 +59,13 @@ L'**agrégation** des événements est l'obstacle principal à la réussite du p
 ### Détermination de `location_uid` via `location_name`
 
 _OpenAgenda oblige à fournir un `location_uid` à la création d'un événement (pour les événements dits physiques)._
-_Dans le cadre d'un import Google Agenda (Ga) ou d'un import csv, on ne dispose que d'un `location_name`_
+_Dans le cadre d'un importics (Ga, Fb events) ou d'un import csv, on ne dispose que d'un `location_name`_
 _On expérimente des fonctionnalités pour trouver le lieu dans le base de données OpenAgenda correspondant au nom du lieu trouvé dans la nature._
 
 * `getOaLocations.js`
 
 *   Récupérer tous les lieux OpenAgenda avec `name` et `address`
-*   Fuzzy search de l'input (Google Agenda ou csv) sur les lieux Open Agenda
+*   Fuzzy search de l'input (ics ou csv) sur les lieux Open Agenda
 *   Si correspondance avec un bon score, prendre le meilleur score
 *   Sinon, créer un nouveau lieu en utilisant le geocoding de l'API OpenAgenda
 *   Si le lieu créé n'est pas en Bretagne, emergency rollback de l'extrême
@@ -76,9 +76,6 @@ _On expérimente des fonctionnalités pour trouver le lieu dans le base de donn�
 
 _[TO DO]_
 
-### Evénements récurrents via Google Agenda
-
-_[TO DO]_
 
 ### Validation de Lieux
 
@@ -106,12 +103,12 @@ Pour les secrets Open Agenda (API pub & secret keys):
 ## Utilisation
 
 ```shell
-$ node import_google_agenda.js
+$ node import_ics.js
 $ node validation_locations.js
 $ node csv/import_csv.js name_of_your_file.csv
 ```
 
-## `import_google_agenda.js`
+## `import_ics.js`
 
 ### Détails sur la résolution des ambigüités
 
@@ -145,10 +142,10 @@ $ node csv/import_csv.js name_of_your_file.csv
 ## `resources/getOaLocation.js`
 
 ```javascript
-const { getCorrespondingOaLocationFromGa } = require("../resources/getOaLocation")
+const { getCorrespondingOaLocation } = require("../resources/getOaLocation")
 
 const main = async () => {
-    const OaLocation = await getCorrespondingOaLocationFromGa("your_location_string")
+    const OaLocation = await getCorrespondingOaLocation("your_location_string")
 }
 
 main()

@@ -50,20 +50,20 @@ const searchOALocation = (eventlocation, locationsData) => {
 /**
  * Get a good matching location in OpenAgenda or empty object.
  *
- * @param {string} GaLocations  - An adress or place name.
+ * @param {string} inputLocations  - An adress or place name.
  * @return {Promise<Array>}     - Object with found OA location {OALocationuid, NameAdress, roundedScore}.
  *                                or {} if no match found.
  *                           
  */
-const matchGaOaLocations = async (GaLocation, accessToken) => {
+const matchOaLocations = async (inputLocation, accessToken) => {
     const resultOAL = await getLocations(accessToken);
     const OALocations = resultOAL?.locations ?? []
-    console.log("Searching match for ", GaLocation);
-    if (!GaLocation || OALocations?.length == 0) {
-        console.log("[ERROR] GaLocation is null or OA Locations list is empty ")
+    console.log("Searching match for ", inputLocation);
+    if (!inputLocation || OALocations?.length == 0) {
+        console.log("[ERROR] inputLocation is null or OA Locations list is empty ")
         return {}
     }
-    const searchFullResultOA = searchOALocation(GaLocation, OALocations)
+    const searchFullResultOA = searchOALocation(inputLocation, OALocations)
     if (!searchFullResultOA[0]?.NameAdress) {
         console.log("[ERROR] No match found in existing OA locations ")
         return {}
@@ -74,23 +74,23 @@ const matchGaOaLocations = async (GaLocation, accessToken) => {
 
 };
 
-const getCorrespondingOaLocationFromGa = async (GaLocation) => {
+const getCorrespondingOaLocation = async (inputLocation) => {
     const accessToken = await retrieveAccessToken(secretKey)
 
     // try to find an existing OALocation
-    const OALocation = await matchGaOaLocations(GaLocation, accessToken)
+    const OALocation = await matchOaLocations(inputLocation, accessToken)
 
     if (OALocation?.NameAdress && OALocation?.OALocationUid) {
         // Case 1: Best case scenario where match is found
-        // FIXME: What if we have a false positive e.g. GaLocation = "Mediathèque Elliant" and OaLocation = "Médiathèque Concarneau"
+        // FIXME: What if we have a false positive e.g. inputLocation = "Mediathèque Elliant" and OaLocation = "Médiathèque Concarneau"
         // TODO: (?) Tweak FuzeJS to return nothing when score is not high enough
         console.log("--> Returning existing OALcocation: ", OALocation.OALocationUid)
         return OALocation.OALocationUid
-    } else if (GaLocation) {
+    } else if (inputLocation) {
         // then try to create an OALocation with their search API
         // Case 2 : No match found so we try to create the event with Open Agenda GeoCoding API
         // CAVEAT: Trick to split name and address is specific to Google Agenda syntax (cannot be used as is for other sources e.g. when scraping)
-        const response = await postLocation(accessToken, GaLocation.split(",")[0], GaLocation)
+        const response = await postLocation(accessToken, inputLocation.split(",")[0], inputLocation)
         if (!response?.location?.uid) {
             // Case 2.1 : Nothing created
             console.log("--> Returning location  'To be defined' (Could not create location on OpenAgenda)")
@@ -122,25 +122,25 @@ const getCorrespondingOaLocationFromGa = async (GaLocation) => {
 
 }
 
-module.exports = { getCorrespondingOaLocationFromGa }
+module.exports = { getCorrespondingOaLocation }
 
 /**
- * Test getCorrespondingOaLocationFromGa() with different exemples             
+ * Test getCorrespondingOaLocation() with different exemples             
  */
 
 // const LocationsExemples = [
-//     { GALocation: 'MJC Tregunc Le Sterenn, Rue Jacques Prévert, 29910 Trégunc, France'  },
-//     { GALocation: 'Explore'  },
-//     { GALocation: "Bar de Test, 1 Pl. de l'Église, 29100 Pouldergat"  },
-//     { GALocation: 'qsdfg'  },
-//     { GALocation: '30 Rue Edgar Degas, 72000 Le Mans'  },
-//     { GALocation: '11 Lieu-dit, Quilinen, 29510 Landrévarzec'}
+//     { inputLocation: 'MJC Tregunc Le Sterenn, Rue Jacques Prévert, 29910 Trégunc, France'  },
+//     { inputLocation: 'Explore'  },
+//     { inputLocation: "Bar de Test, 1 Pl. de l'Église, 29100 Pouldergat"  },
+//     { inputLocation: 'qsdfg'  },
+//     { inputLocation: '30 Rue Edgar Degas, 72000 Le Mans'  },
+//     { inputLocation: '11 Lieu-dit, Quilinen, 29510 Landrévarzec'}
 // ]
 
 // async function testLocations( locationArray) {
 //     for (const loc of locationArray) {
-//         console.log("Searching for '", loc.GALocation,"'\n");
-//         const testUid = await getCorrespondingOaLocationFromGa(loc.GALocation);
+//         console.log("Searching for '", loc.inputLocation,"'\n");
+//         const testUid = await getCorrespondingOaLocation(loc.inputLocation);
 //         console.log("matching --> OA Uid=", testUid);
 //         console.log("--------------");
 //     }
