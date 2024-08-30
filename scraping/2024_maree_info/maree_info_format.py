@@ -42,7 +42,7 @@ def format_df():
 
     # Add necessary columns to match
     # # title;desc;long_desc;start_date;end_date;location_uid;link;img;keyword;location_name
-    df['title'] = 'Grande marée 🐟'
+    df['title'] = 'Grande marée (' + df['tide'].astype(str) + ")"
     # tide
     # height
     df['start_date'] = df['datetime_start'].dt.strftime('%Y-%m-%dT%H:%M:%s+0200')
@@ -69,8 +69,12 @@ def format_csv():
     print(len(df))
     # Reorganize columns
     df = df[['title', 'tide', 'height', 'start_date', 'end_date', 'location_uid', 'link', 'img', 'coef', 'location_name']]
+    # # Target : "title;desc;long_desc;start_date;end_date;location_uid;link;img;keyword;location_name"
+    # Rename columns
+    df.columns = ['title', 'desc', 'long_desc', 'start_date', 'end_date', 'location_uid', 'link', 'img', 'keyword', 'location_name']
+
     print(df.head(2))
-    df.to_csv('scraping/2024_maree_info/maree_info_format.csv', index=False, sep=';', header=False)
+    df.to_csv('scraping/2024_maree_info/maree_info_format.csv', index=False, sep=';')
 
 
 # create_df()

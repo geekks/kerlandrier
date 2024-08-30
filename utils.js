@@ -92,7 +92,8 @@ const patchOaEvent = async (oa, AGENDA_UID, eventUid, patch) => {
 
 const deleteOaEvents = async (oa, AGENDA_UID, uids) => {
   for (const uid of uids) {
-    await oa.events.delete(AGENDA_UID, uid);
+    const result = await oa.events.delete(AGENDA_UID, uid);
+    console.log("Deleted event:", result);
   }
   return uids
 }

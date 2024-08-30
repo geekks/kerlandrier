@@ -64,24 +64,30 @@ def fetch_data_and_parse_table(urls):
                         # Handle the case where coef is not a number (like '\xa0')
                         return int(coef_str) if coef_str.strip() and coef_str.isdigit() else None
 
-                    def determine_tide(height, coef):
-                        if height.name == 'b' and coef:
-                            return "high"
-                        elif height.name != 'b' and not coef:
-                            return "low"
+                    def determine_tide(height):
+                        if height.name == 'b':
+                            return "Haute"
                         else:
-                            return None
+                            return "Basse"
 
                     # Initialize the list of dictionaries
                     result = []
 
+                    current_coef = None
                     # Iterate over the data to transform each list into a dictionary
                     for entry in transposed_data:
                         time = entry[0].get_text(strip=True) if isinstance(entry[0], str) else entry[0].text
                         height = parse_height(entry[1]) if isinstance(entry[1], str) else parse_height(entry[1].text)
                         coef = parse_coef(entry[2]) if isinstance(entry[2], str) else parse_coef(entry[2].text)
+                        print(coef)
 
-                        tide = determine_tide(entry[1], coef)
+                        if coef is None:
+                            coef = current_coef
+                        else:
+                            current_coef = coef
+
+
+                        tide = determine_tide(entry[1])
 
                         result.append({
                             'time': time,
@@ -109,6 +115,6 @@ if __name__ == "__main__":
     urls = generate_urls(start_date, end_date, base_url)
     data = fetch_data_and_parse_table(urls)
     # Print to file
-    with open('maree_info.txt', 'w') as f:
+    with open('scraping/2024_maree_info/maree_info_raw_dict.txt', 'w') as f:
         f.write(str(data))
     
