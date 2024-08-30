@@ -92,7 +92,9 @@ const main = async () => {
       // Check if an existing oa event is there with the same "uid-externe"
       const oaEvent = oaEvents.data.events.find(e => e["uid-externe"] === event["uid-externe"]);
       if (oaEvent) {
-        console.log("Skipping event - ", event.slug);
+        // console.log("Skipping event - ", event.slug);
+        const updatedEvent = await oa.updateEvent(AGENDA_UID, oaEvent.uid, event)
+        console.log("updatedEvent - ", updatedEvent.slug);
         continue;
       } else {
         const createdEvent = await createOaEvent(oa, AGENDA_UID, event)

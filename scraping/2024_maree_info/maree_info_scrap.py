@@ -35,7 +35,7 @@ def fetch_data_and_parse_table(urls):
     })
 
     data = {}
-
+    current_coef = None
     for url in urls:
         try:
             response = session.get(url)
@@ -51,9 +51,7 @@ def fetch_data_and_parse_table(urls):
                     date = url.split('=')[-1]
                     cols = [td.contents for td in day.find_all('td')]
                     cols = [list(filter(lambda tag: tag.name != 'br', tag_list)) for tag_list in cols]
-                    print(cols)
                     transposed_data = list(map(list, zip(*cols)))
-                    print(transposed_data)
 
 
                     def parse_height(height_str):
@@ -73,17 +71,20 @@ def fetch_data_and_parse_table(urls):
                     # Initialize the list of dictionaries
                     result = []
 
-                    current_coef = None
+                    
                     # Iterate over the data to transform each list into a dictionary
-                    for entry in transposed_data:
+                    for idx, entry in enumerate(transposed_data):
                         time = entry[0].get_text(strip=True) if isinstance(entry[0], str) else entry[0].text
                         height = parse_height(entry[1]) if isinstance(entry[1], str) else parse_height(entry[1].text)
                         coef = parse_coef(entry[2]) if isinstance(entry[2], str) else parse_coef(entry[2].text)
-                        print(coef)
 
-                        if coef is None:
+                        if coef is not None:
+                            current_coef = coef
+                        elif coef is None and current_coef is not None:
                             coef = current_coef
-                        else:
+                        elif coef is None and current_coef is None:
+                            nextEntry = transposed_data[idx+1]
+                            coef = parse_coef(nextEntry[2]) if isinstance(nextEntry[2], str) else parse_coef(nextEntry[2].text)
                             current_coef = coef
 
 
@@ -95,7 +96,6 @@ def fetch_data_and_parse_table(urls):
                             'coef': coef,
                             'tide': tide
                         })
-                    print(result)
                     data[date] = result
                 else:
                     print(f"No table found with id 'MareeJourDetail_0' in {url}")
@@ -103,6 +103,7 @@ def fetch_data_and_parse_table(urls):
                 print(f"Failed to retrieve data from {url}, Status Code: {response.status_code}")
         except requests.exceptions.RequestException as e:
             print(f"Request failed: {e}")
+    print(data)
     return data
     
 
