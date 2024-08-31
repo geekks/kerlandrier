@@ -4,7 +4,7 @@ const moment = require('moment') // for date handling
 const axios = require("axios"); // for http requests
 const csv = require('csv-parser');
 
-const { slugify } = require('../utils');
+const { slugify, updateOaEvent } = require('../utils');
 
 const { createOaEvent } = require("../utils");
 const { getCorrespondingOaLocation, matchOaLocations } = require("../resources/getOaLocation")
@@ -16,10 +16,7 @@ const secretKey = process.env.OA_SECRET_KEY;
 const AGENDA_UID = process.env.AGENDA_UID
 const TBD_LOCATION_UID = process.env.TBD_LOCATION_UID
 
-const oa = new OaSdk({
-  publicKey,
-  secretKey,
-});
+
 
 // from root: node import_csv.js <filename>
 // node csv/import_csv.js 2024_cap_danse.csv
@@ -48,9 +45,12 @@ const csvToJson = async () => {
 const main = async () => {
   const uids = []
   try {
+    const oa = new OaSdk({
+      publicKey,
+      secretKey,
+    });
     // Format csv data into oa events
     const jsonEvents = await csvToJson();
-    console.log("jsonEvents - ", jsonEvents);
     for (let i = 0; i < jsonEvents.length; i++) {
       const event = jsonEvents[i];
       if (!event.location_uid) {
@@ -89,11 +89,12 @@ const main = async () => {
     )
 
     for (const event of csvEvents) {
+      // console.log("event - ", event);
       // Check if an existing oa event is there with the same "uid-externe"
       const oaEvent = oaEvents.data.events.find(e => e["uid-externe"] === event["uid-externe"]);
       if (oaEvent) {
-        // console.log("Skipping event - ", event.slug);
-        const updatedEvent = await oa.updateEvent(AGENDA_UID, oaEvent.uid, event)
+        console.log("Try to update event - ", event['uid-externe'], event.slug, oaEvent.slug);
+        const updatedEvent = await updateOaEvent(oa, AGENDA_UID, oaEvent.uid, event)
         console.log("updatedEvent - ", updatedEvent.slug);
         continue;
       } else {
@@ -103,7 +104,7 @@ const main = async () => {
       }
     }
   } catch (error) {
-    console.error('Error processing CSV:', error.response);
+    console.error('Error processing CSV:', error);
   } finally {
     console.log("uids - ", uids);
     fs.writeFile(`csv/${filename.split('.')[0]}.txt`, uids.join('\n'), (err) => {
