@@ -141,7 +141,7 @@ const createEvent = async (accessToken, event) => {
 
         if (eventCreationResponse.status >= 200 && eventCreationResponse.status <= 299) {
             console.log("Event creation response: ", eventCreationResponse.data);
-            return eventCreationResponse.data.access_token;
+            return eventCreationResponse.data;
         }
     } catch (exc) {
         console.error("Error retrieving access token: ", exc.response ? exc.response.data : exc.message);
