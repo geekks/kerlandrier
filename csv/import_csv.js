@@ -72,7 +72,8 @@ const main = async () => {
           locationUid: event.location_uid ?? TBD_LOCATION_UID,
           links: [{ link: event.link }],
           image: { url: event.img },
-          keywords: { fr: [event.keyword] }
+          keywords: { fr: [event.keyword] },
+          onlineAccessLink: event['book_link']
       });
     }
     // Get upcoming events from Open Agenda to check duplicates
