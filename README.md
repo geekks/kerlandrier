@@ -83,8 +83,6 @@ _[TO DO]_
     + Pour éviter de devoir le faire via l'UI Openagenda,
     + Ca fait professionnel.
 
-![Validate locations](./assets/validate_locations.png "Menu d'administration des Lieux")
-
 ## Installation
 
 ### Installer les librairies
@@ -103,43 +101,44 @@ Pour les secrets Open Agenda (API pub & secret keys):
 ## Utilisation
 
 ```shell
-$ node import_ics.js
+$ node ics/import_ics.js
 $ node validation_locations.js
-$ node csv/import_csv.js name_of_your_file.csv
+$ node csv/import_csv.js filename.csv
 ```
 
-## `import_ics.js`
+## `node ics/import_ics.js`
+
+_Script qui prend l'URL d'un calendrier au format `.ics`/`.ical` et qui intéragit avec l'utilisateur pour éviter les doublons._
 
 ### Détails sur la résolution des ambigüités
 
-![update](./assets/update.png)\
-*Evénement trouvé en auto : Mise à jour auto*
+* Événement trouvé en auto _> Mise à jour auto_
+* Événement non trouvé automatiquement dans OA _> Interaction avec l'utilisateur_
+    * L'administrateur souhaite créer l'événement _> Création nouvel événement OA_
+    * L'administrateur a trouvé l'événement dans la liste _> Mise à jour événement OA_
 
-![prompt](./assets/prompt.png)\
-*Evénement non trouvé automatiquement dans OA : On interagit avec l'administrateur.*
+## `node csv/import_csv.js filename.csv`
 
-![Create](./assets/create.png "Create")\
-*Evénement non trouvé automatiquement dans OA & l'administrateur souhaite créer l'événement issu de GA* 
-
-![patch](./assets/patch.png)\
-*Evénement non trouvé automatiquement dans OA mais l'administrateur l'a trouvé*
-
-## `csv/import_csv.js`
+_Script qui prend un fichier csv et crée une événement par ligne du csv._
+_Pas d'interaction avec l'utilisateur, soit on trouve un `uid-externe` identique et on update, soit on crée._
 
 ### Format du csv
 
 - OpenAgenda rend obligatoire un lieu (`location_uid`) et un horaire (`start_date`, `end_date`)
-    + Par défaut, on utilise un lieu `A DEFINIR` pour simplifier (puis on modifie dans OpenAgenda pour trouver ou créer le lieu, cf. # pour les méthodes plus sioux)
+    + Par défaut, on utilise un lieu `A DEFINIR` pour simplifier (puis on modifie dans OpenAgenda pour trouver ou créer le lieu, cf. [ici](#resources-getOaLocationjs) pour les méthodes plus sioux)
     + Les horaires doivent être au format `YYYY-MM-DDTHH:mm:ss+0200` (+0200 pour le fuseau horaire France)
 
-| title | desc | long_desc | start_date | end_date | location_uid | link | img | keyword | location_name |
-|-------|------|-----------|------------|----------|--------------|------|-----|---------|---------------|
-|   1   |   2  |     3     |      4     |     5    |      6       |  7   |   8 |    9    |    10         |
-|Nom principal|(Très) courte description|Longue description|2024-08-07T19:00:00+0200|2024-08-07T20:30:00+0200|Laisser vide si inconnu|url externe d'info|url image d'illustration|Type d'événement|Lieu format Google Agenda si pas de location uid|
+| title | desc | long_desc | start_date | end_date | location_uid | link | img | keyword | location_name | book_link |
+|-------|------|-----------|------------|----------|--------------|------|-----|---------|---------------|-----------|
+|   1   |   2  |     3     |      4     |     5    |      6       |  7   |   8 |    9    |    10         |     11    |
+|Nom principal|(Très) courte description|Longue description|2024-08-07T19:00:00+0200|2024-08-07T20:30:00+0200|Laisser vide si inconnu|url externe d'info|url image d'illustration|Type d'événement|Lieu format Google Agenda si pas de location uid|Lien d'inscription|
 
-> On construit un `uid-externe` (`filename` + `row_index`) pour éviter les doublons en cas d'update frénétique et incontrôlable.
+> On construit un `uid-externe` (`filename` + `row_index`) pour éviter les doublons en cas d'update frénétique et incontrôlable (peu probable parce que c'est déjà chiant de le faire une fois).
 
 ## `resources/getOaLocation.js`
+
+_Fonction qui prend une nom de lieu et qui trouve une correspondance ou crée le lieu si possible._
+
 
 ```javascript
 const { getCorrespondingOaLocation } = require("../resources/getOaLocation")
@@ -164,10 +163,13 @@ Le projet dit oui à votre assistance si vous :
 
 ## Auteurs & remerciements
 
-*   Convivialités Inc.
 *   Le Jockey
+*   La Hacking Hut®
+*   L'[api oa](https://developers.openagenda.com/00-structure-evenement/)
 *   Le [sdk oa](https://github.com/OpenAgenda/oa-public/tree/main/sdk-js)
+*   Ce [Google sheet](https://docs.google.com/spreadsheets/d/1Z1x7kJPdJWx5ha9R72SIihwreVV7sF7CnuVIjlArTTE/edit?gid=2108004383#gid=2108004383)
+
 
 ### Licence
 
-_Pas de licence_
+_To do_
