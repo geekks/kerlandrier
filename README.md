@@ -168,6 +168,7 @@ Le projet dit oui à votre assistance si vous :
 *   L'[api oa](https://developers.openagenda.com/00-structure-evenement/)
 *   Le [sdk oa](https://github.com/OpenAgenda/oa-public/tree/main/sdk-js)
 *   Ce [Google sheet](https://docs.google.com/spreadsheets/d/1Z1x7kJPdJWx5ha9R72SIihwreVV7sF7CnuVIjlArTTE/edit?gid=2108004383#gid=2108004383)
+*   Ce [Figma](https://www.figma.com/design/lWl3pg0mMPVUMK55Z3VGPh/Kerlandrier?node-id=1-6&node-type=FRAME&t=xRVzEoVvrHjPotYx-0)
 
 
 ### Licence
