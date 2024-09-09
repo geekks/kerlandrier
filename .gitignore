@@ -6,3 +6,10 @@ node_modules
 *.log
 .vscode
 secret_token.json
+
+#Python conda env
+.autoenv.zsh
+
+# Python requests cache
+scrap_cache.sqlite
+__pycache__
