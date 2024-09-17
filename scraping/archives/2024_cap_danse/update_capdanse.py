@@ -1,5 +1,5 @@
 """_summary_
-Add Cap Danse events V2 (with time and images)
+Add Cap Danse events V2 (with time, description and images)
 
 """
 
@@ -12,110 +12,80 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 from utils import *
 from scraping_utils import *
 from manualHttpRequests import *
+from getAaLocation import get_corresponding_oa_location
 
-import datetime
-import re
+from slugify import slugify
 
-file_name="/var/www/Kerlandrier/scraping/2024_cap_danse/2024_capdanse.csv"
+access_token = retrieve_access_token(secret_key)
 
-def create_events(data_dict:dict):
-    """Create events from data"""
-    description=get_string_from_webpage(data_dict.links,"#content-event > div.rangee > div.col60.ecart-normal")
-    date_begin=get_iso_date_from_text(data_dict.date)
-    duree=get_string_from_webpage(data_dict.links,"#sidebar > div.bloc-infos-sidebar > div:nth-child(1) > p:nth-child(2)")
-    date_end=get_end_date_from_start_and_duration(date_begin, duree)
-    imageFullPath = download_image_from_webpage(url = data_dict.url,
-                            selector = "#head-event > div > picture > img",
-                            imgTag= 'data-lazy-src',
-                            path = os.getcwd()+"/scraping/2024_cap_danse/images/",
-                            )
-    events=[]
-    for event_data in data_dict:
-        if event_data.keywords != "CAP DanseExposition":
-            eventOA= {
-                        "uid-externe": str(math.floor(random.random()*1000)),
-                        "title": event_data.keywords + " " + event_data.title,
-                        "summary": { "fr": "Résumé" },
-                        "description": { "fr": description },
-                        "locationUid": "lieu",
-                        "links": "url",
-                        "longDescription":  "",   
-                        "keywords": {
-                                    "fr": ["musique", "concert", "rock"]
-                                    },
-                        "timings": [
-                                {
-                                "begin": date_begin,
-                                "end": date_end
+file_name="/var/www/Kerlandrier/scraping/archives/2024_cap_danse/2024_capdanse.csv"
+all_events = read_csv(file_name)
+
+def create_CAPDanse_OA_event(event:dict)->dict:
+    """Get data from existing CapDanse csv and scraping of each event. Returns Dict with OA keys"""
+    if event.get('keywords') != "CAP DanseExposition":
+        event_url=event.get('links')
+        location_uid = get_corresponding_oa_location(event.get('location').replace('CONCARNEAU', '')) #Avoid direct match with Location "CONCARNEAU"
+        resume=get_string_from_webpage(event_url,"#head-event > div > div > p.mention")
+        long_description=get_string_from_webpage(event_url,"#content-event > div.rangee > div.col60.ecart-normal > p")[:9000] # 10 000 characters max
+        short_description=long_description.split("\n")[0][:150] # 200 characters max in short description
+        date_begin=get_datetime_from_text(event.get('date')).replace(year=2024) # Keeps day & month but avoid assigning the wrong year. 
+        duree=get_string_from_webpage(event_url,"#sidebar > div.bloc-infos-sidebar > div > p:nth-child(2)") # Get duration from text field like "2h30"
+        date_end=get_end_date_from_start_and_duration(date_begin, duree)
+        # Special webpage structure for event Id = 20
+        if (int(event.get('Id')) == 20):
+            selector = "#head-event > div > img"
+            imgTag= 'src'
+        else:
+            selector = "#head-event > div > picture > img"
+            imgTag= 'data-lazy-src'
+        imageURL = get_image_from_webpage(url = event_url,
+                                selector = selector,
+                                imgTag= imgTag,
+                                path = None,
+                                )
+        
+        eventOA= {
+                    "uid-externe": event.get('Id') + "-" + slugify(event.get('title')),
+                    "title": { "fr": event.get('keywords') + " / "  + " " + event.get('title') ,
+                            "en": event.get('keywords')  + " " + event.get('title') } ,
+                    "summary": { "fr": resume },
+                    "description": { "fr": short_description, "en": short_description  },
+                    "locationUid": int(location_uid),
+                    "links": event_url,
+                    "longDescription": event_url + os.linesep + long_description,   
+                    "keywords": {
+                                "fr": ["CapDanseEvent", "CapDanse", "danse"]
                                 },
-                                ],
-                        "onlineAccessLink": "url",
-                        "image": {
-                            "url" : "https://i.pinimg.com/originals/d1/d9/ae/d1d9aec6e351baa115000b4b75e02b1b.jpg"
-                        }
-                    }
-            events.append(eventOA)
-    return events
-
-
-
-
-
-def get_end_date_from_start_and_duration(start_date: datetime,duree: str): 
-    if duree & start_date:
-        pattern_xhy = r'(\d+)h(\d+)?'
-        pattern_ymin = r'(\d+) ?min'
-        hours=2
-        minutes=0
-        if re.match(pattern_xhy, duree):
-            hours   = int( re.match(pattern_xhy, duree).group(1) or 0)
-            minutes = int( re.match(pattern_xhy, duree).group(2) or 0)
-        elif re.match(pattern_ymin, duree):
-            minutes = int( re.match(pattern_ymin, duree).group(1) or 0)
-        hr =( hours, minutes)
-        end_date=   ( start_date
-                        + datetime.timedelta(hours=hr[0], minutes=hr[1] )
-                    ).isoformat()
-        return end_date
+                    "timings": [
+                            {
+                            "begin": date_begin.isoformat(),
+                            "end": date_end.isoformat()
+                            },
+                            ],
+                    "onlineAccessLink": event_url,
+                    "image": {"url": imageURL}
+                }
+        return eventOA
     else:
         return None
 
+# First create a Json file with all valid events
+OAEvents=[]
+for event in all_events:
+    oa_event = create_CAPDanse_OA_event(event)
+    if oa_event:
+        OAEvents.append(oa_event)
+    save_dict_to_json_file(OAEvents, "eventsCapDanse2ToPost.json")
 
-# for event in events_dict:
-#     start_date=dateparser.parse(event.get('date'))
-#     if (event.get('keywords') not in ["CAP DanseExpositionSpectacle", "CAP DanseExposition"]) and start_date:
-#         duree=get_string_from_webpage(event.get('links'),"#sidebar > div.bloc-infos-sidebar > div:nth-child(1) > p:nth-child(2)")
-#         end_date=get_end_date_from_start_and_duration(start_date,duree)
-    
+# Then post them and saved them (with attributed unique ID form OA) in a json file
+# to update them or restart from last success in case of failing
+saved_events_capv2={}
+with open('eventsCapDanse2ToPost.json') as json_file:
+    eventsv2 = json.load(json_file)
+for event in eventsv2:
+    response = create_event(access_token,event = event, image_path = None)
+    uid = response['event']['uid'] if response['event'] else event['uid-externe'] 
+    saved_events_capv2[response['event']['uid'] ] = event
+    save_dict_to_json_file(saved_events_capv2, "eventsCapDanse2Created.json")
 
-
-
-# start_date ? =get_string_from_webpage("https://www.danseatouslesetages.org/action-artistique/masterclass/",
-#                         "#content-event > div.rangee > div.col60.ecart-normal",
-#                         )
-
-
-
-def retrieve_existing_capdase_events(access_token, search):
-    access_token = retrieve_access_token(secret_key)
-    if access_token:
-        parameters = {
-                'search': search
-                }
-        events_result = get_events(public_key, parameters)
-        filtered_events_cap = []
-        for event in events_result['events']:
-            oa_ID = int(event["uid-externe"].replace("import_csv_raw_2024_cap_danse_",''))
-            data = {
-                "keywords": event["keywords"]["fr"][0] or "",
-                "uid": event["uid"],
-                "oa_ID": oa_ID,
-                "title": event["title"]["fr"],
-                "description": event["description"]["fr"],
-                }
-            filtered_events_cap.append(data)
-        # print_well_json(filtered_events_cap)
-        sorted_events_cap = sorted(filtered_events_cap, key=lambda x: x["oa_ID"])
-        print( "Nombre d'events: " + str(filtered_events_cap.__len__()))
-        with open("events_cap.json", 'w', encoding='utf8') as events_file:
-            json.dump(sorted_events_cap, events_file)
