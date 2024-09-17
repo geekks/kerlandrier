@@ -18,7 +18,7 @@ TBD_LOCATION_UID = os.getenv('TBD_LOCATION_UID')
 
 def get_nonce():
     """
-    Purpose: get a timestamp + random number to be unique for each request, even those in short time interval (with same timestamp)
+    A timestamp + random number to be unique for each request, even those in short time interval (with same timestamp)
     """
     nonce = str(int(time.time())) + str(math.floor(random.random()*1000))
     return nonce
@@ -29,8 +29,8 @@ def retrieve_access_token(api_secret_key):
     if os.path.exists(token_file_path):
         with open(token_file_path, 'r', encoding='utf8') as token_file:
             token_data = json.load(token_file)
-
-        if 'access_token' in token_data and 'endate' in token_data and time.time() - token_data['endate'] < 3600:
+        time_diff =token_data['endate']- time.time()
+        if ('access_token' in token_data) and ('endate' in token_data) and (time_diff > 1800):
             return token_data['access_token']
         
     print("Request a new token and save it in secret_token.json")
@@ -61,23 +61,38 @@ def retrieve_access_token(api_secret_key):
         return None
 
 def get_locations(access_token):
-    headers = {
-        "Content-Type": 'application/json',
-        "access-token": access_token,
-        "nonce": get_nonce(),
-    }
+
     url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/locations"
+    after =0
+    all_locations=[]
+    while after is not None:
+        try:
+            headers = {
+                    "Content-Type": 'application/json',
+                    "access-token": access_token,
+                    "nonce": get_nonce()
+                    }
+            response = requests.get(url, headers=headers, params={'after': after})
+            response.raise_for_status()
+            locations_part=json.loads(response.text)
+            all_locations.extend(locations_part.get('locations'))
+            after=locations_part.get('after')
 
-    try:
-        response = requests.get(url, headers=headers)
-        response.raise_for_status()
-        return response.json()
-
-    except requests.exceptions.RequestException as exc:
-        print(f"Error retrieving locations: {exc}")
-        return None
+        except requests.exceptions.RequestException as exc:
+            print(f"Error retrieving locations: {exc}")
+            return None
+    return all_locations
 
 def post_location(access_token, name, adresse):
+    """
+    Create a new location in OpenAgenda, using OA Geocoder with 'name' and 'address' as search parameters
+    Args:
+        access_token (str): The access token obtained by calling `retrieve_access_token`
+        name (str): The name of the new location
+        adresse (str): The address of the new location
+    Returns:
+        The JSON response of the API call
+    """
     headers = {
         "Content-Type": 'application/json',
         "access-token": access_token,
@@ -97,10 +112,11 @@ def post_location(access_token, name, adresse):
         return response.json()
 
     except requests.exceptions.RequestException as exc:
-        if exc.response and exc.response.status_code == 400 and exc.response.json().get('message') == "geocoder didn't find address":
+        text_json = json.loads(exc.response.text)
+        if text_json.get('message') == "geocoder didn't find address":
             print("No existing address found by OA API")
         else:
-            print(f"Error OA Post location: {exc}")
+            print(f"Error Posting location on OA: {exc}")
         return None
 
 def delete_location(access_token, location_uid):
@@ -135,26 +151,28 @@ def get_events(public_key, params: dict):
         print(f"Error getting events: {exc}")
         return None
 
-def create_event(access_token, event):
+def create_event(access_token, event, image_path=None):
     headers = {
-        "Content-Type": 'application/json',
+        "Content-Type": "application/json",
         "access-token": access_token,
         "nonce": get_nonce(),
     }
     body = event
     url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/events"
-
+    # files = None
+    # if image_path:
+    #     with open(image_path, 'rb') as img_file:
+    #         files = {'image': img_file}
     try:
-        event_creation_response = requests.post(url, json=body, headers=headers)
+        event_creation_response = requests.post(url, json=body , headers=headers)
         
-        # Vérifie si le code de statut n'est pas 200
         if event_creation_response.status_code != 200:
             print(f"Error creating event: Status Code {event_creation_response.status_code}")
             print(f"Response:")
             print(json.dumps(event_creation_response.json(), indent=4))
             return None
-
-        return event_creation_response.json()
+        print('event "'+ event['title']['fr'] + '" created with uid: ' + str(json.loads(event_creation_response.text)['event']['uid']) )
+        return  event_creation_response.json()
 
     except requests.exceptions.RequestException as exc:
         print(f"Error creating event: {exc}")

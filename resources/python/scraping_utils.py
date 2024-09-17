@@ -5,6 +5,7 @@ Functions to help Scrap data from webpages
 """
 
 import csv, os
+import datetime
 import requests, requests_cache
 from bs4 import BeautifulSoup
 import  dateparser, pytz
@@ -24,49 +25,54 @@ def read_csv(file_name):
 
 def get_string_from_webpage(url: str, selector: str) -> str:
     """
-    Get an info from a string in a webpage
+    Get first string found with css selector in a webpage
     input @selector in css style. Ex: "#head-event > div > div > div.dates-event > p.bold"
     """
     html_doc = requests.get(url, timeout=getTimeout).text
     parsed_html = BeautifulSoup(html_doc, features="lxml")
-    extractedDiv = parsed_html.select_one(selector)
-    extractedString = extractedDiv.text if extractedDiv else None
-    return extractedString
+    extractedDivs = parsed_html.select(selector)
+    extractedStrings =""
+    for el in extractedDivs:
+        extractedStrings += el.text + os.linesep if el.text else  os.linesep
+    return extractedStrings
 
-def download_image_from_webpage(url: str, selector: str , imgTag: str, path:str) -> str:
+def get_image_from_webpage(url: str, selector: str , imgTag: str, path:str) -> str:
     """
-    Download an image from webpage and css selector\n
-    Return: image name\n
+    Get an image from webpage and css selector\n
+    Return: 
+    * if path is given: the local path of dowloaded image\n
+    * else: return image url\n
     Input:  
     * @url: webpage url\n
     * @selector in css style. Ex: "#head-event > div > picture > img"\n
-    * @imgTag: htlm tag containing image url
+    * @imgTag: htlm tag containing image url\n
+    * @path(optionnal): the directory for downloading image
     """
     eventName=url.rstrip('/').split("/")[-1]
-    if not os.path.exists(path):
-        os.makedirs(path)
     response = requests.get(url, timeout=getTimeout)
     response.raise_for_status()
     parsed_html = BeautifulSoup(response.text, features="lxml")
     # Using css selector
-    img_path = parsed_html.select_one(selector).get(imgTag)
-    imgUrlName=img_url.rstrip('/').split("/")[-1]
+    img_url = parsed_html.select_one(selector).get(imgTag)
+    imgName=img_url.rstrip('/').split("/")[-1]
     if not img_url.startswith('http'):
-        img_url = urlparse.urljoin('https://' + urlparse(url).netloc , img_url)
-    img_data = requests.get(img_url).content
+        img_url = urlparse.urljoin('https://' + urlparse(url).netloc , imgName)
+    if not path:
+        return  img_url
     
-    imageFullPath = os.path.join(path, eventName +"-" + imgUrlName)
+    img_data = requests.get(img_url).content
+    imageFullPath = os.path.join(path, eventName +"-" + imgName)
     with open(imageFullPath, 'wb') as f:
                 f.write(img_data)
     return imageFullPath
 
-def get_iso_date_from_text(stringDate):
-    "Convert String to ISO date like 2024-08-20T09:00:00+02:00"
+def get_datetime_from_text(stringDate:str) -> datetime.datetime:
+    "Convert a human readable string to datetime object"
     parsedDate = dateparser.parse(stringDate, languages=["fr"])
     # print("parsedDate: ", parsedDate)
     parisTZ = pytz.timezone("Europe/Paris")
-    isoDate = parisTZ.localize(parsedDate).isoformat() if parsedDate else None
+    datetime = parisTZ.localize(parsedDate) if parsedDate else None
     # print("fromisoformat: ", isoDate)
-    return isoDate
+    return datetime
 
 

@@ -4,24 +4,26 @@ Functions used in different scripts for scraping or interact with OpenAgenda APi
 
 import datetime
 import json
+import re
 
 import dateparser
 import pytz
 
-def print_well_json(data):
-    """
-    Purpose: display a well formatted json in console
-    """
-    wellJson= json.dumps(data, indent=4)
+def print_well_json(data)->None:
+    """ display a well formatted json in console"""
+    wellJson= json.dumps(data, indent=4, ensure_ascii=False)
     print(wellJson) 
 
-def save_dict_to_json(data_dict:dict, file_name:str):
+def save_dict_to_json_file(data_dict:dict, file_name:str)->None:
     """Export the data to a JSON file"""
-    with open(file_name, "w") as file:
-        json.dump(data_dict, file, indent=4)
+    with open(file_name, mode="w", encoding='utf8') as file:
+        json.dump(data_dict, file, indent=4, ensure_ascii=False)
 
-def validate_event_data(event):
-    """Validate the event data and structure"""
+def validate_OAevent_format(event:dict) -> bool:
+    """
+    Raise error if timing, url or keywords is not valid with OA event
+    To avoid POST Event to OpenAgenda API
+    """
     # Example validation: check if date is longer than 5 caracters
     for  timing in event.get("timings") :
         print( "timing_begin",timing.get("begin"))
@@ -35,4 +37,28 @@ def validate_event_data(event):
         raise ValueError(f"Empty keywords: {event.get("keywords")}")
     if "https://" not in event.get("links"):
         raise ValueError(f"URL not valid: {event.get("links")}")
-    return event
+    return True
+
+def get_end_date_from_start_and_duration(start_date: datetime.datetime,duree: str) -> datetime.datetime: 
+    """
+    Get end_date (DateTime) from start_date (DateTime) and duration (Str like "2h 30min")
+    Default "duree" if not correct or provided : 2h
+    """
+    if start_date:
+        pattern_xhy = r'(\d+)h(\d+)?'
+        pattern_ymin = r'(\d+) ?min'
+        hours=2
+        minutes=0
+        if re.match(pattern_xhy, duree):
+            hours   = int( re.match(pattern_xhy, duree).group(1) or 0)
+            minutes = int( re.match(pattern_xhy, duree).group(2) or 0)
+        elif re.match(pattern_ymin, duree):
+            minutes = int( re.match(pattern_ymin, duree).group(1) or 0)
+        hr =( hours, minutes)
+        end_date=   ( start_date
+                        + datetime.timedelta(hours=hr[0], minutes=hr[1] )
+                    )
+        return end_date
+    else:
+        raise ValueError("start_date is None")
+        return None
