@@ -2,9 +2,11 @@
 
 import sys
 import os
+import git
 
 # Ajoute le dossier "ressources" au sys.path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../resources/python')))
+git_root = git.Repo(search_parent_directories=True).working_tree_dir
+sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
 
 from utils import *
 from scraping_utils import *
