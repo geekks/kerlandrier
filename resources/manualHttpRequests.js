@@ -88,15 +88,15 @@ const getLocations = async (accessToken) => {
     }
 }
 
-const postLocation = async (accessToken, name, adresse) => {
+const postLocation = async (accessToken, address) => {
     const headers = {
         "Content-Type": 'application/json',
         "access-token": accessToken,
         "nonce": Date.now(),
     };
     const body = {
-        name: name,
-        address: adresse,
+        name: address,
+        address: address,
         countryCode: "FR",
         state: 0, // means "not verified"
     };
