@@ -55,19 +55,34 @@ const retrieveAccessToken = async (apiSecretKey) => {
 }
 
 const getLocations = async (accessToken) => {
-    const headers = {
-        "Content-Type": 'application/json',
-        "access-token": accessToken,
-        "nonce": Date.now(),
-    };
+
     const url = `https://api.openagenda.com/v2/agendas/${AGENDA_UID}/locations`;
 
     try {
-        const response = await axios.get(url, { headers });
-        if (response.status >= 200 && response.status <= 299) {
-            // console.log("Locations Response: ", response.data);
-            return response.data;
+        let after=0
+        let all_locations=[]
+        
+        const headers = {
+            "Content-Type": 'application/json',
+            "access-token": accessToken,
+            "nonce": Date.now(),
+            };
+        const params = {
+            "after":after
+        };
+
+        while (after != null ){
+            headers["nonce"] = Date.now();
+            params["after"]  = after
+            const response   = await axios.get(url, { headers, params });
+                if (response.status >= 200 && response.status <= 299) {
+                    all_locations =all_locations.concat(response.data.locations);
+                    after=response.data.after
+                }
+            
         }
+        return all_locations
+
     } catch (exc) {
         console.error("Error retrieving locations: ", exc.response ? exc.response.data : exc.message);
     }
