@@ -145,7 +145,7 @@ module.exports = { getCorrespondingOaLocation }
     // { inputLocation: '11 Lieu-dit, Quilinen, 29510 Landrévarzec'},
     // { inputLocation: 'Kerminy, Rosporden'},
     // { inputLocation: 'CONCARNEAU, Carré des larrons'}
-]
+
 
 // async function testLocations( locationArray) {
 //     for (const loc of locationArray) {
