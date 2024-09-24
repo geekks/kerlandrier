@@ -68,7 +68,8 @@ const getLocations = async (accessToken) => {
             "nonce": Date.now(),
             };
         const params = {
-            "after":after
+            "after":after,
+            "detailed":1
         };
 
         while (after != null ){
