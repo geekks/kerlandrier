@@ -53,6 +53,8 @@ const oa = new OaSdk({
       location.city === 'Briec' ||
       location.city === 'Douarnenez'  ||
       location.city === 'Penmarc\'h' ||
+      location.city === 'Lechiagat' ||
+      location.city === 'Léchiagat' ||
       location.city === 'Pluguffan'
     ) {
       await oa.locations.patch(AGENDA_UID, location.uid, { description: {fr: "CORNOUAILLE"} })
