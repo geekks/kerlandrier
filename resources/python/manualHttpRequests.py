@@ -48,7 +48,7 @@ def retrieve_access_token(api_secret_key):
 
         token_data = {
             'access_token': oauth_response.json()['access_token'],
-            'endate': time.time() + 3600,  # 1 heure à partir de maintenant
+            'endate': int(time.time()) + oauth_response.json()['expires_in'] - 600,  # 50m à partir de maintenant
         }
 
         with open(token_file_path, 'w', encoding='utf8') as token_file:
