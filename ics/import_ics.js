@@ -29,6 +29,7 @@ const importIcs = async (icsUrl) => {
 
   // Iterate over upcoming events
   const uids = []
+  let i = 0;
   for (const newOaEvent of newOaEvents) {
     console.log("\n======== Scanning newOaEvent ========");
     // // Skip guessing location for now
@@ -59,7 +60,9 @@ const importIcs = async (icsUrl) => {
             value: e.uid
           }
         })
+
         oaEventsChoices.unshift({name: "Créer un nouvel événement",value: null})
+
         const question = {
           type: 'list',
           name: 'uid',
@@ -67,8 +70,10 @@ const importIcs = async (icsUrl) => {
           choices: oaEventsChoices
         }
 
-        const answer = await inquirer.prompt(question)
-        if (answer.uid === null) {
+        // const answer = await inquirer.prompt(question)
+        const answer = null
+
+        if (!answer || answer.uid === null) {
           // No existing event, create a new one
           console.log("\t[CREATE] Create new event")
           const createdEvent = await createOaEvent(oa, AGENDA_UID, newOaEvent)
@@ -111,6 +116,7 @@ const importIcs = async (icsUrl) => {
         if (err) throw err;
         console.log('Log file saved.');
       });
+      i++
     }
   }
 }

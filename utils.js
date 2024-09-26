@@ -37,6 +37,7 @@ const pullUpcomingIcsEvents = async (icsUrl) => {
 
   for (const eventKey in events) {
     const icsEvent = data[eventKey];
+    // console.log("icsEvent - ", icsEvent);
     // Check if start and end are more than 24 h
     const timings = []
     if (moment(icsEvent.end).diff(moment(icsEvent.start), 'hours') < 24) {
@@ -71,7 +72,15 @@ const pullUpcomingIcsEvents = async (icsUrl) => {
       locationUid: locationUid,
       locationName: icsEvent.location,
       longDescription: { fr: noHtmlicsEvent },
-      timings
+      timings,
+      onlineAccessLink: icsEvent.url,
+      attendanceMode: 3, // 1 physique, 2 online, 3 mixte
+      links: {
+        link: icsEvent.url,
+        data: {
+          url: icsEvent.url
+        }
+      }
     }
     upcomingGaEvents.push(newOaEvent);
   }
