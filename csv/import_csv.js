@@ -57,6 +57,9 @@ const main = async () => {
         const OaLocationUid = await getCorrespondingOaLocation(event.location_name)
         event.location_uid = OaLocationUid
       }
+
+      const keywords = event.keyword.split('-');
+
       csvEvents.push({
           "uid-externe": `${filename.split('.')[0]}_${i}`,
           title: event['title'],
@@ -70,10 +73,11 @@ const main = async () => {
             },
           ],
           locationUid: event.location_uid ?? TBD_LOCATION_UID,
-          links: [{ link: event.link }],
+          links: [{ link: event.link, data: { url: event.link } }],
           image: { url: event.img },
-          keywords: { fr: [event.keyword] },
-          onlineAccessLink: event['book_link']
+          keywords: { fr: keywords },
+          onlineAccessLink: event.link,
+          attendanceMode: (event.link) ? 3 : 1, // 1 physique, 2 online, 3 mixte
       });
     }
     // Get upcoming events from Open Agenda to check duplicates
