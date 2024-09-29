@@ -55,6 +55,12 @@ const oa = new OaSdk({
       location.city === 'Penmarc\'h' ||
       location.city === 'Lechiagat' ||
       location.city === 'Léchiagat' ||
+      location.city === 'Ergué Gaberic' ||
+      location.city === 'Ergué-Gabéric' ||
+      location.city === 'Chateaulin' ||
+      location.city === 'Châteaulin' ||
+      location.city === 'Plobannalec' ||
+      location.city === 'Plobannalec-Lesconil' ||
       location.city === 'Pluguffan'
     ) {
       await oa.locations.patch(AGENDA_UID, location.uid, { description: {fr: "CORNOUAILLE"} })
@@ -63,6 +69,7 @@ const oa = new OaSdk({
     location.city === 'Malestroit' ||
     location.city === 'Quéven' ||
     location.city === 'Malguénac' ||
+    location.city === 'Landerneau' ||
     location.city === 'Mellionnec' ||
     location.city === 'Brest' ||
     location.city === 'Bréal-sous-Montfort' ||
