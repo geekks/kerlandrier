@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { OaSdk } = require('@openagenda/sdk-js') // OpenAgenda Sdk
-const moment = require('moment') // for date handling
+const moment = require('moment-timezone');
+const TIMEZONE = 'Europe/Paris';
 const axios = require("axios"); // for http requests
 const csv = require('csv-parser');
 
@@ -52,6 +53,8 @@ const main = async () => {
     // Format csv data into oa events
     const jsonEvents = await csvToJson();
     for (let i = 0; i < jsonEvents.length; i++) {
+      // if (i > 0) break // Testing purpose
+      
       const event = jsonEvents[i];
       if (!event.location_uid) {
         const OaLocationUid = await getCorrespondingOaLocation(event.location_name)
@@ -61,24 +64,24 @@ const main = async () => {
       const keywords = event.keyword.split('-');
 
       const timings = []
-    if (moment(event.end_date).diff(moment(event.start_date), 'hours') < 24) {
+    if (moment.tz(event.end_date, TIMEZONE).diff(moment.tz(event.start_date, TIMEZONE), 'hours') < 24) {
       timings.push({
-        begin: moment(event.start_date).toISOString(),
-        end: moment(event.end_date).toISOString()
+        begin: moment.tz(event.start_date, TIMEZONE).toISOString(),
+        end: moment.tz(event.end_date, TIMEZONE).toISOString()
       })
     } else {
       // Split into an array of items that are maximum 24h
-      let begin = moment(event.start_date)
-      let end = moment(event.end_date)
+      let begin = moment.tz(event.start_date, TIMEZONE)
+      const end = moment.tz(event.end_date, TIMEZONE)
       while (begin.isBefore(end)) {
+        const endTiming = begin.clone().add(0.5, 'hours')
         timings.push({
-          begin: begin.toISOString(),
-          end: begin.add(0.5, 'hours').toISOString()
+          begin: begin.tz(TIMEZONE).format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
+          end: endTiming.tz(TIMEZONE).format("YYYY-MM-DDTHH:mm:ss.SSSZ")
         })
-        begin = begin.add(24, 'hours')
+        begin = begin.add(1, 'days')
       }
     }
-
 
       csvEvents.push({
           "uid-externe": `${filename.split('.')[0]}_${i}`,
@@ -125,12 +128,15 @@ const main = async () => {
         continue;
       } else {
         const createdEvent = await createOaEvent(oa, AGENDA_UID, event)
-        console.log("createdEvent - ", createdEvent.slug);
+        console.log("createdEvent - ", `https://openagenda.com/fr/kerlandrier/events/${createdEvent.slug}`);
         uids.push(createdEvent.uid)
       }
     }
   } catch (error) {
-    console.error('Error processing CSV:', error);
+    console.error('Error processing CSV:');
+    if (error.response && error.response.data) {
+      console.error(error.response.data);
+    }
   } finally {
     console.log("uids - ", uids);
     fs.writeFile(`csv/${filename.split('.')[0]}.txt`, uids.join('\n'), (err) => {
