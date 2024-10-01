@@ -60,18 +60,39 @@ const main = async () => {
 
       const keywords = event.keyword.split('-');
 
+      const timings = []
+    if (moment(event.end_date).diff(moment(event.start_date), 'hours') < 24) {
+      timings.push({
+        begin: moment(event.start_date).toISOString(),
+        end: moment(event.end_date).toISOString()
+      })
+    } else {
+      // Split into an array of items that are maximum 24h
+      let begin = moment(event.start_date)
+      let end = moment(event.end_date)
+      while (begin.isBefore(end)) {
+        timings.push({
+          begin: begin.toISOString(),
+          end: begin.add(0.5, 'hours').toISOString()
+        })
+        begin = begin.add(24, 'hours')
+      }
+    }
+
+
       csvEvents.push({
           "uid-externe": `${filename.split('.')[0]}_${i}`,
           title: event['title'],
           slug: slugify(event['title']),
           description: { fr: event.desc.length > 0 ? event.desc : "-" },
           longDescription: { fr: `${event.long_desc}${event.location_name ? `\n${event.location_name}` : ''}` },
-          timings: [
-            {
-              begin: event.start_date,
-              end: event.end_date,
-            },
-          ],
+          timings,
+          // timings: [
+          //   {
+          //     begin: event.start_date,
+          //     end: event.end_date,
+          //   },
+          // ],
           locationUid: event.location_uid ?? TBD_LOCATION_UID,
           links: [{ link: event.link, data: { url: event.link } }],
           image: { url: event.img },
