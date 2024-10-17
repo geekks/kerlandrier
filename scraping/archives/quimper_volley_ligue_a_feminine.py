@@ -14,10 +14,12 @@ columns = {
     "event__participant 2":"title",
 }
 
-df = pd.read_csv('scraping/.csv', sep=',')
+df = pd.read_csv('scraping/quimper_volley_ligue_a_feminine.csv', sep=',')
 
 # Rename df columns based on columns dict
 df.rename(columns=columns, inplace=True)
+
+df = df[df["vs"] == "Quimper F"]
 
 # Convert date column to datetime
 # Example sam 7 septembre 2024 becomes 2024-09-07
@@ -27,7 +29,8 @@ df['date_end'] = df['date_start']
 df['start_date'] = df['date_start'].dt.strftime('%Y-%m-%dT20:00:00+0200')
 df['end_date'] = df['date_end'].dt.strftime('%Y-%m-%dT22:00:00+0200')
 
-# df['title'] = "Quimper Volley vs " + df['title']
+# Prefix title with "Bélier"
+df['title'] = "Quimper Volley vs " + df['title']
 
 
 df['desc'] = "-"
@@ -41,4 +44,4 @@ df["keyword"] = "Volley"
 df = df[['title', 'desc', 'long_desc', 'start_date', 'end_date', 'location_uid', 'link', 'img', 'keyword', 'location_name']]
 
 
-df.to_csv('csv/.csv', index=False, sep=';')
+df.to_csv('csv/quimper_volley_ligue_a_feminine.csv', index=False, sep=';')
