@@ -14,13 +14,7 @@ const oa = new OaSdk({
   secretKey,
 });
 
-const uids = [
-  89180288, 70747606,
-  38665884,  6387181,
-  17223403,  4944233,
-  28039707, 77223426,
-  57660539
-]
+const uids = [ 20298008, 23417707, 46873428, 38991016, 11517693, 99815747 ]
 
 const main = async () => {
   await deleteOaEvents(oa, AGENDA_UID, uids)
