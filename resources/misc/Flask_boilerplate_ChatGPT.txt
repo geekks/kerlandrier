@@ -1,0 +1,159 @@
+Here’s a basic boilerplate for your Flask app to display and interact with OpenAgenda events:
+
+### 1. Prerequisites
+
+- Ensure you have installed the following Python libraries:
+    ```bash
+    pip install flask requests
+    ```
+
+### 2. Flask Application (`app.py`)
+
+```python
+from flask import Flask, render_template, request, jsonify
+import requests
+
+app = Flask(__name__)
+
+# Replace with your OpenAgenda API endpoint and keys
+OPENAGENDA_API_URL = 'https://api.openagenda.com/v2/agendas/your_agenda_id/events'
+PUBLIC_KEY = 'your_public_key'
+SECRET_KEY = 'your_secret_key'
+
+@app.route('/')
+def home():
+    # Fetch events from OpenAgenda API
+    response = requests.get(OPENAGENDA_API_URL, params={'key': PUBLIC_KEY})
+    
+    # Check for valid response
+    if response.status_code == 200:
+        events = response.json()['events']
+    else:
+        events = []
+
+    return render_template('index.html', events=events)
+
+@app.route('/update', methods=['POST'])
+def update_events():
+    # Extract data from the form
+    updated_data = request.json
+    selected_events = updated_data['selected_events']
+    
+    # Loop through the selected events and send PATCH requests
+    for event in selected_events:
+        event_id = event['id']
+        updated_keywords = event['keywords']
+
+        # Send PATCH request to OpenAgenda API
+        patch_url = f"{OPENAGENDA_API_URL}/{event_id}"
+        headers = {'Authorization': f'Bearer {SECRET_KEY}'}
+        patch_data = {
+            "keywords": updated_keywords
+        }
+        response = requests.patch(patch_url, headers=headers, json=patch_data)
+
+        if response.status_code != 200:
+            return jsonify({'status': 'error', 'message': 'Failed to update some events'}), 500
+
+    return jsonify({'status': 'success', 'message': 'Events updated successfully'})
+
+if __name__ == '__main__':
+    app.run(debug=True)
+```
+
+### 3. HTML Template (`templates/index.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenAgenda Events</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>OpenAgenda Events</h1>
+    <form id="eventForm">
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>Title</th>
+                    <th>Location</th>
+                    <th>Date</th>
+                    <th>Keywords</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for event in events %}
+                <tr>
+                    <td><input type="checkbox" class="event-checkbox" data-id="{{ event.id }}"></td>
+                    <td>{{ event.title }}</td>
+                    <td>{{ event.location['name'] }}</td>
+                    <td>{{ event.date }}</td>
+                    <td contenteditable="true" class="editable-keywords">{{ event.keywords }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="button" onclick="updateEvents()">Update</button>
+    </form>
+
+    <script>
+        function updateEvents() {
+            const selectedEvents = [];
+
+            // Loop through each selected row
+            $('input.event-checkbox:checked').each(function () {
+                const row = $(this).closest('tr');
+                const eventId = $(this).data('id');
+                const updatedKeywords = row.find('.editable-keywords').text();
+
+                // Gather data for each selected event
+                selectedEvents.push({
+                    id: eventId,
+                    keywords: updatedKeywords
+                });
+            });
+
+            // Send PATCH request with selected events
+            $.ajax({
+                url: '/update',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ selected_events: selectedEvents }),
+                success: function (response) {
+                    alert(response.message);
+                },
+                error: function () {
+                    alert('Failed to update events.');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+```
+
+### Explanation:
+1. **Flask App:**
+    - `GET` request to fetch OpenAgenda events using the `publicKey`.
+    - Renders events in a table with columns: Title, Location, Date, and Keywords.
+    - The `keywords` column is editable in the frontend.
+    - Checkboxes allow selecting rows for updating.
+    - A `PATCH` request is made to OpenAgenda for each selected row using the `secretKey` when the "Update" button is pressed.
+
+2. **HTML Template:**
+    - Displays the events in a table format.
+    - Uses `contenteditable="true"` for inline editing of the keywords field.
+    - Includes a button to trigger an AJAX request to update selected events.
+
+### 4. Running the app:
+Start the Flask server by running:
+
+```bash
+python app.py
+```
+
+Now you should have a table of OpenAgenda events with editable keywords, selectable rows, and an update mechanism using the PATCH request.
