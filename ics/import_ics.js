@@ -17,7 +17,7 @@ const publicKey = process.env.OA_PUBLIC_KEY;
 const secretKey = process.env.OA_SECRET_KEY;
 const AGENDA_UID = process.env.AGENDA_UID
 
-const now = moment().format("YYYY-MM-DD");
+const now = moment().format("YYYY-MM-DD_HHmmss");
 
 const importIcs = async (icsUrl) => {
   const oa = new OaSdk({
@@ -57,6 +57,7 @@ locationsChoices.unshift({name: "=== DEFAULT LOCATION ===",value: TBD_LOCATION_U
   // Iterate over upcoming events
   const uids = []
   let i = 0;
+  console.log("newOaEvents - ", new Set(newOaEvents.map(e => e.locationName).sort((a, b) => a.localeCompare(b))));
   for (const newOaEvent of newOaEvents) {
     // console.log("\n======== Scanning newOaEvent ========");
     // // Skip guessing location for now
@@ -151,6 +152,7 @@ locationsChoices.unshift({name: "=== DEFAULT LOCATION ===",value: TBD_LOCATION_U
       }
     } finally {
       // console.log("uids - ", uids) // Re-user ids for further update, delete...
+      console.log("Uploaded " + i + " events from ICS URL");
       fs.writeFile(`ics/import_ics_${now}.txt`, uids.join('\n'), (err) => {
         if (err) throw err;
         // console.log('Log file saved.');
