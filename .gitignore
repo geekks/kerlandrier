@@ -13,3 +13,6 @@ secret_token.json
 # Python requests cache
 scrap_cache.sqlite
 __pycache__
+*.bak
+*.BAK
+.ipynb_checkpoints
