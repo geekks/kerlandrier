@@ -13,7 +13,7 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 
 from utils import *
 from scraping_utils import *
-from manualHttpRequests import *
+from HttpRequests import *
 from getAaLocation import get_corresponding_oa_location
 
 from slugify import slugify
@@ -33,7 +33,7 @@ def create_OA_event(event:dict)->dict:
         resume="Concarneau vs " + event.get('data-away') + " au stade Guy Piriou"
         date_begin=get_datetime_from_text(event.get('data-date') + " " + event.get('data-time')) 
         duree="2h"
-        date_end=get_end_date_from_start_and_duration(date_begin, duree)
+        date_end=get_end_date(date_begin, duree)
         unique_id = slugify(event.get('data-home') + "-" +  event.get('data-away')+ "-" + str(date_begin.year))
 
         eventOA= {

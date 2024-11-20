@@ -54,7 +54,7 @@ def validate_OAevent_format(event:dict) -> bool:
         raise ValueError(f"URL not valid: {event.get("links")}")
     return True
 
-def get_end_date_from_start_and_duration(start_date: datetime.datetime,duree: str) -> datetime.datetime: 
+def get_end_date(start_date: datetime.datetime,duree: str) -> datetime.datetime: 
     """
     Get end_date (DateTime) from start_date (DateTime) and duration (Str like "2h 30min")
     Default "duree" if not correct or provided : 2h

@@ -13,7 +13,7 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 
 from utils import *
 from scraping_utils import *
-from manualHttpRequests import *
+from HttpRequests import *
 from getAaLocation import get_corresponding_oa_location
 
 from slugify import slugify
@@ -33,7 +33,7 @@ def create_CAPDanse_OA_event(event:dict)->dict:
         short_description=long_description.split("\n")[0][:150] # 200 characters max in short description
         date_begin=get_datetime_from_text(event.get('date')).replace(year=2024) # Keeps day & month but avoid assigning the wrong year. 
         duree=get_string_from_webpage(event_url,"#sidebar > div.bloc-infos-sidebar > div > p:nth-child(2)") # Get duration from text field like "2h30"
-        date_end=get_end_date_from_start_and_duration(date_begin, duree)
+        date_end=get_end_date(date_begin, duree)
         # Special webpage structure for event Id = 20
         if (int(event.get('Id')) == 20):
             selector = "#head-event > div > img"

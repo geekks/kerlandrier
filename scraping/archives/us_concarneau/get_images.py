@@ -13,7 +13,7 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 
 from utils import *
 from scraping_utils import *
-from manualHttpRequests import *
+from HttpRequests import *
 from slugify import slugify
 
 def get_club_logo(club_name):
