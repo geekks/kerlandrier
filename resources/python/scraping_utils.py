@@ -4,7 +4,7 @@ Functions to help Scrap data from webpages
 
 """
 
-import csv, os
+import os
 import datetime
 import requests, requests_cache
 from bs4 import BeautifulSoup
@@ -13,15 +13,6 @@ from urllib.parse import urlparse
 
 getTimeout = 10  # in seconds for Http requests
 requests_cache.install_cache('scrap_cache')
-
-def read_csv(file_name):
-    """Read a CSV file and return a dictionary of Data objects"""
-    data_dict = {}
-    with open(file_name, "r", encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        data_dict = [ row for row in reader]
-    return data_dict
-
 
 def get_string_from_webpage(url: str, selector: str) -> str:
     """

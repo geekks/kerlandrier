@@ -2,8 +2,15 @@
 Functions used in different scripts for scraping or interact with OpenAgenda APi
 """
 
+import sys,os
+from git import Repo
+
+# Ajoute le dossier "ressources" au sys.path
+git_root = Repo(search_parent_directories=True).working_tree_dir
+sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
+
 import datetime
-import json
+import json, csv
 import re
 
 import dateparser
@@ -18,6 +25,14 @@ def save_dict_to_json_file(data_dict:dict, file_name:str)->None:
     """Export the data to a JSON file"""
     with open(file_name, mode="w", encoding='utf8') as file:
         json.dump(data_dict, file, indent=4, ensure_ascii=False)
+
+def read_csv(file_name):
+    """Read a CSV file and return a dictionary of Data objects"""
+    data_dict = {}
+    with open(file_name, "r", encoding='utf-8') as file:
+        reader = csv.DictReader(file)
+        data_dict = [ row for row in reader]
+    return data_dict
 
 def validate_OAevent_format(event:dict) -> bool:
     """
