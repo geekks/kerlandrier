@@ -121,10 +121,10 @@ def post_location(access_token, name, adresse):
 
     except requests.exceptions.RequestException as exc:
         text_json = json.loads(exc.response.text)
-        if text_json.get('message') == "geocoder didn't find address":
-            print("No existing address found by OA API")
-        else:
+        if  text_json.get('message') != "geocoder didn't find address":
             print(f"Error Posting location on OA: {exc}")
+        #else:
+            # print("No existing address found by OA API")
         return None
 
 def delete_location(access_token, location_uid):
@@ -182,7 +182,7 @@ def create_event(access_token, event, image_path=None):
         event_creation_response = requests.post(url, json=body , headers=headers)
         
         if event_creation_response.status_code != 200:
-            print(f"Error creating event: Status Code {event_creation_response.status_code}")
+            print(f"Error creating event {event.get('title').get('fr')}: Status Code {event_creation_response.status_code}")
             print(f"Response:")
             print(json.dumps(event_creation_response.json(), indent=4))
             return None
@@ -190,7 +190,7 @@ def create_event(access_token, event, image_path=None):
         return  event_creation_response.json()
 
     except requests.exceptions.RequestException as exc:
-        print(f"Error creating event: {exc}")
+        print(f"Error creating event {event.get('title').get('fr')}: {exc}")
         return None
 
 def patch_event(access_token, eventUid, eventData):
@@ -232,13 +232,13 @@ def delete_event(access_token, event_uid):
         print(f"Error deleting event: {exc}")
         return None
 
-def search_events( search_string:str, past_events:bool  = False, other_params:dict = None ) -> dict | None:
+def search_events( pub_key: str, search_string:str, past_events:bool  = False, other_params:dict = None ) -> dict | None:
     """
     Search events in the OpenAgenda API by a given search string.
     """
     headers = {
         "Content-Type": 'application/json',
-        "key": public_key,
+        "key": pub_key,
     }
     params = {
         "search": search_string,
@@ -259,7 +259,7 @@ def search_events( search_string:str, past_events:bool  = False, other_params:di
         print(f"Error getting events: {exc}")
         return None
 
-def get_uid_from_name_date(event_name:str, text_date:str = None) -> str:
+def get_uid_from_name_date(pub_key: str ,event_name:str, text_date:str = None, uid_externe:bool = False) -> str|None:
     date = dateparser.parse(text_date)
     paris_zone = pytz.timezone('Europe/Paris')
     if date and date.tzinfo != 'Europe/Paris': date = date.astimezone(paris_zone)
@@ -270,8 +270,8 @@ def get_uid_from_name_date(event_name:str, text_date:str = None) -> str:
                         }
                     }
 
-    search_result = search_events( event_name, past_events=True, other_params=params)
+    search_result = search_events( pub_key,  event_name, past_events=True, other_params=params)
     if search_result and search_result["events"]: 
-        event_uid=search_result["events"][0].get("uid")
-        return event_uid
+        uid= search_result["events"][0].get("uid-externe") if uid_externe else search_result["events"][0].get("id")
+        return uid
     return None
