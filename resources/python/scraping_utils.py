@@ -67,3 +67,7 @@ def get_datetime_from_text(stringDate:str) -> datetime.datetime:
     return datetime
 
 
+def strip_html(html_content):
+    """Remove HTML tags from a string."""
+    return BeautifulSoup(html_content, "html.parser").get_text() if html_content else "-"
+
