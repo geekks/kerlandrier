@@ -37,7 +37,7 @@ def retrieve_access_token(api_secret_key):
     if os.path.exists(token_file_path):
         with open(token_file_path, 'r', encoding='utf8') as token_file:
             token_data = json.load(token_file)
-        time_diff =token_data['endate']- time.time()
+        time_diff =token_data['endate']- round(time.time()*1000)
         if ('access_token' in token_data) and ('endate' in token_data) and (time_diff > 1800):
             return token_data['access_token']
         
