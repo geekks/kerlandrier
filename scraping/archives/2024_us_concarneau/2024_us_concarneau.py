@@ -14,7 +14,7 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 from utils import *
 from scraping_utils import *
 from HttpRequests import *
-from getAaLocation import get_corresponding_oa_location
+from getOaLocation import get_corresponding_oa_location
 
 from slugify import slugify
 
