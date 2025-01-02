@@ -17,17 +17,17 @@ const oa = new OaSdk({
 const avenCities=['Bannalec','Beg-Meil','Concarneau','Elliant','LaForêt-Fouesnant','Pleuven',
   'Pont-Aven','Rosporden','Fouesnant','Melgven','Moelansurmer','Moëlan-sur-Mer',
   'Kervaziou','Scaër','Névez','Nizon','Port-la-Forêt','Quimperlé','Saint-Philibert',
-  'Saint-Yvi','Tourch','Trégunc','La Forêt-Fouesnant',
+  'Saint-Yvi','Tourch','Trégunc','La Forêt-Fouesnant', 'Mellac',
   'Autre' // Pour les lieux inconnus, localisés par défaut à BILBAO
 ];
 
 const cornouailleCities=['Aber-Wrac\'h','Quimper','Pont-l\'Abbé','Briec','Douarnenez' ,'Penmarc\'h','Lechiagat',
   'Léchiagat','Ergué Gaberic','Ergué-Gabéric','Chateaulin','Châteaulin','Plobannalec',
   'Plobannalec-Lesconil','Pluguffan','Trégornan','Combrit','Île-Tudy','Saint-Goazec',
-  'Saint-Brieuc','Plomelin','Clohars-Carnoët'];
+  'Saint-Brieuc','Plomelin','Clohars-Carnoët','Clohars-Fouesnant','Quéménéven', 'Le Faouët', 'Locronan', 'Tréguennec', 'Coray'];
 
 const bretagneCities= ['Rennes','Malestroit','Quéven','Malguénac','Landerneau','Mellionnec','Brest',
-  'Bréal-sous-Montfort','Pont-Scorff','Ploemeur','Plœmeur','Guingamp','Baud','Lorient'];
+  'Bréal-sous-Montfort','Pont-Scorff','Ploemeur','Plœmeur','Guingamp','Baud','Lorient','Hennebont','Plonéour-Lanvern', 'Loperhet', 'Saint-Renan', 'Loqueffret'];
 
 // TO DO: lowercase + slugify location name for better matching
 
@@ -41,7 +41,7 @@ const bretagneCities= ['Rennes','Malestroit','Quéven','Malguénac','Landerneau'
   console.log("locations - ", locations.length);
   if (locations && locations.length > 1) {
     for (const location of locations) {
-      if (!location.description) console.log("!!! NO DESCRIPTION !!!", location.name, location.city)
+      if (location.description.fr) continue
       locationsUrls.push(`"https://openagenda.com/kerlandrier/admin/locations/${location.uid}/edit",`)
       if      (avenCities.includes(location.city)) await 
           oa.locations.patch(AGENDA_UID, location.uid, { description: {fr: "AVEN"} })
