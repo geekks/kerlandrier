@@ -6,13 +6,14 @@ Functions to help Scrap data from webpages
 
 import os
 import datetime
-import requests, requests_cache
+import requests
+# import requests_cache
 from bs4 import BeautifulSoup
 import  dateparser, pytz
 from urllib.parse import urlparse
 
 getTimeout = 10  # in seconds for Http requests
-requests_cache.install_cache('scrap_cache')
+# requests_cache.install_cache('scrap_cache')
 
 def get_string_from_webpage(url: str, selector: str) -> str:
     """
