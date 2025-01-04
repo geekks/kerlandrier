@@ -27,7 +27,7 @@ def get_or_create_oa_location(searched_location:str, access_token: str)->str:
     Tries to find a matching OpenAgenda location for the given searched location.
     Returns an OALocation UID (found, created or default one.)
     """
-    print("Searching location for : '"+ searched_location +"'")
+    print("- searching location for : '"+ searched_location +"'")
     
     allOaLocations = get_locations(access_token)
     if not searched_location or not allOaLocations:
