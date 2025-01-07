@@ -34,13 +34,19 @@ def get_or_create_oa_location(searched_location:str, access_token: str)->str:
         print("[ERROR] inputLocation is null or OA Locations list is empty")
         return None
     
-    # 0) Use optimized searched, removing false positives
-    optimized_searched_location=re.sub(r'\b(?:concarneau|(?:29|56)\d{3})\b',
+    # 0) Use optimized searched, removing false positives and misleadings patterns
+    locationPatterneRemoved=re.sub(r'\b(?:concarneau|(?:29|56)\d{3}|officiel)\b',
                                             '',
                                             searched_location,
                                             flags=re.IGNORECASE
                                             )
-    
+    locationPatternToSpace=re.sub(r'[-,]',
+                                            ' ',
+                                            locationPatterneRemoved,
+                                            flags=re.IGNORECASE
+                                            )
+    optimized_searched_location = locationPatternToSpace
+    print("- match optimized name:  '"+ optimized_searched_location +"'")
     # 1) Try to find an existing OALocation
     OaLocationsIndex = {}
     for location in allOaLocations:
@@ -112,7 +118,9 @@ locations_examples = [
     {"input_location": 'Boulevard de la Gare, Quimperlé'},
     {"input_location": 'La Caserne Concarneau '},
     {"input_location": '1 avenue Docteur NICOLAS, Concarneau'},
-    {"input_location": 'Intermarché Concarneau (Route de Trégunc, Concarneau)'}
+    {"input_location": 'Intermarché Concarneau (Route de Trégunc, Concarneau)'},
+    {"input_location": 'Brasserie Tri Martolod-Officiel'}
+    
 ]
 
 def test_locations(location_array):
