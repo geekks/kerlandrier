@@ -60,7 +60,7 @@ def import_ics(ics_url):
                 if response['event']['uid']:
                     eventLog["import_status"] = "New event"
                     new_events_nbr += 1
-                    eventLog["OaUrl"] = response['event']['OaUrl']
+                    eventLog["OaUrl"] = "https://openagenda.com/fr/" + response['event']['originAgenda']['slug'] + "/events/" + response['event']['slug']
                 else:
                     print( f"Problem for {event_title}" )
                     eventLog["import_status"] = "Error posting event on OA"
