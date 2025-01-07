@@ -15,11 +15,11 @@ import time, datetime, pytz, dateparser
 from utils import print_well_json
 
 # Chargement des variables d'environnement
-public_key = os.getenv('OA_PUBLIC_KEY')
-secret_key = os.getenv('OA_SECRET_KEY')
+OA_PUBLIC_KEY = os.getenv('OA_PUBLIC_KEY')
+OA_SECRET_KEY = os.getenv('OA_SECRET_KEY')
 ACCESS_TOKEN_URL = os.getenv('ACCESS_TOKEN_URL')
 AGENDA_UID = os.getenv('AGENDA_UID')
-token_file_name = './secret_token.json'
+TOKEN_FILE_PATH = './secret_token.json'
 TBD_LOCATION_UID = os.getenv('TBD_LOCATION_UID')
 
 
@@ -31,15 +31,20 @@ def get_nonce():
     return nonce
     
 
-def retrieve_access_token(api_secret_key):
+def retrieve_access_token(oa_secret_key):
     # Vérifier si le jeton existe déjà
-    token_file_path = os.path.join(git_root,token_file_name)
+    token_file_path = os.path.join(git_root,TOKEN_FILE_PATH)
     if os.path.exists(token_file_path):
         with open(token_file_path, 'r', encoding='utf8') as token_file:
             token_data = json.load(token_file)
-        time_diff =token_data['endate']- round(time.time()*1000)
-        if ('access_token' in token_data) and ('endate' in token_data) and (time_diff > 1800):
-            return token_data['access_token']
+            if (
+                    token_data
+                    and token_data.get("access_token")
+                    and token_data.get("endate")
+                    and (token_data["endate"] - time.time()) > 0
+                ):
+                    return token_data["access_token"]
+        
         
     # print("Request a new token and save it in secret_token.json")
     headers = {
@@ -47,7 +52,7 @@ def retrieve_access_token(api_secret_key):
     }
     body = {
         "grant_type": "client_credentials",
-        "code": api_secret_key,
+        "code": oa_secret_key,
     }
 
     try:
@@ -150,7 +155,7 @@ def get_events( params: dict):
         "Content-Type": 'application/json',
         "nonce": get_nonce()
     }
-    url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/events?key={public_key}"
+    url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/events?key={OA_PUBLIC_KEY}"
     after =0
     all_events=[]
     while after is not None:
