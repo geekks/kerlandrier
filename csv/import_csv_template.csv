@@ -1,2 +1,2 @@
 title;desc;long_desc;start_date;end_date;location_uid;link;img;keyword;location_name
-Nom principal;Nom secondaire;;2024-08-07T19:00:00+0200;2024-08-07T20:30:00+0200;Laisser vide si inconnu;url externe d'info;url image d'illustration;Concert;Lieu format Google Agenda si pas de location uid
++0200 heure d'été;+0100 heure d'hiver;;2024-08-07T19:00:00+0200;2024-08-07T20:30:00+0200;Laisser vide si inconnu;url externe d'info;url image d'illustration;Concert;Lieu format Google Agenda si pas de location uid
