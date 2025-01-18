@@ -19,7 +19,7 @@ OA_PUBLIC_KEY = os.getenv('OA_PUBLIC_KEY')
 OA_SECRET_KEY = os.getenv('OA_SECRET_KEY')
 ACCESS_TOKEN_URL = os.getenv('ACCESS_TOKEN_URL')
 AGENDA_UID = os.getenv('AGENDA_UID')
-TOKEN_FILE_PATH = './secret_token.json'
+TOKEN_FILE_NAME = 'secret_token.json'
 TBD_LOCATION_UID = os.getenv('TBD_LOCATION_UID')
 
 
@@ -33,7 +33,7 @@ def get_nonce():
 
 def retrieve_access_token(oa_secret_key):
     # Vérifier si le jeton existe déjà
-    token_file_path = os.path.join(git_root,TOKEN_FILE_PATH)
+    token_file_path = os.path.join(git_root,TOKEN_FILE_NAME)
     if os.path.exists(token_file_path):
         with open(token_file_path, 'r', encoding='utf8') as token_file:
             token_data = json.load(token_file)
@@ -41,7 +41,7 @@ def retrieve_access_token(oa_secret_key):
                     token_data
                     and token_data.get("access_token")
                     and token_data.get("endate")
-                    and (token_data["endate"] - time.time()) > 0
+                    and (token_data["endate"] - round(time.time()*1000)) > 0
                 ):
                     return token_data["access_token"]
         
