@@ -21,7 +21,7 @@ const oa = new OaSdk({
 (async () => {
   await oa.connect();
   const locations = await oa.locations.list(AGENDA_UID, { state: 0 });
-  console.log("locations - ", locations);
+  // console.log("locations - ", locations);
   if (locations && locations.locations && locations.locations.length > 1) {
     for (const location of locations.locations) {
       if (location.state === 0) {
@@ -29,7 +29,7 @@ const oa = new OaSdk({
         console.log("Validated location: ", location.name)
       }
     }
-    console.log("Validated locations: ", locations.locations.length)
+    console.log("Total validated locations: ", locations.locations.length)
   } else {
     console.log("No locations require validation.")
   }
