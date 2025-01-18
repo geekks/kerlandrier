@@ -25,6 +25,14 @@ now=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 def import_ics(ics_url):
     """Main function to import ICS events."""
     # Fetch events from ICS
+    
+    # TO DO
+    # Improve Text rendering, progress bar in console https://rich.readthedocs.io/en/stable/index.html
+    
+    # TO DO
+    # Removed stylished text with weird fonts, like in https://yaytext.com/unstyle/
+    # Unidecode ? https://pypi.org/project/Unidecode/
+    
     ics_events = pull_upcoming_ics_events(ics_url)
     print(f"Total number of events on ICS : {len(ics_events)}\n")
     access_token = retrieve_access_token(SECRET_KEY)
@@ -61,13 +69,14 @@ def import_ics(ics_url):
                     eventLog["import_status"] = "New event"
                     new_events_nbr += 1
                     eventLog["OaUrl"] = "https://openagenda.com/fr/" + response['event']['originAgenda']['slug'] + "/events/" + response['event']['slug']
+                    print("\n")
                 else:
-                    print( f"Problem for {event_title}" )
+                    print( f"Problem for {event_title}\n" )
                     eventLog["import_status"] = "Error posting event on OA"
                     eventLog["error"]= response
 
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: {e} \n" )
             eventLog["import_status"] = "Error processing event"
             eventLog["error"]=  {e}
 
