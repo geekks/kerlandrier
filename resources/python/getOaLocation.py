@@ -22,7 +22,7 @@ import re
 TBD_LOCATION_UID = os.getenv("TBD_LOCATION_UID")
 
 
-def get_or_create_oa_location(searched_location:str, access_token: str)->str:
+def get_or_create_oa_location(searched_location:str, access_token: str, debug:bool=False)->str:
     """
     Tries to find a matching OpenAgenda location for the given searched location.
     Returns an OALocation UID (found, created or default one.)
@@ -35,18 +35,18 @@ def get_or_create_oa_location(searched_location:str, access_token: str)->str:
         return None
     
     # 0) Use optimized searched, removing false positives and misleadings patterns
-    locationPatterneRemoved=re.sub(r'\b(?:concarneau|(?:29|56)\d{3}|officiel)\b',
+    locationPatterneRemoved=re.sub(r'\b(?:concarneau|(?:29|56)\d{3}|officiel|quimperl(?:e|é)|france)\b',
                                             '',
                                             searched_location,
                                             flags=re.IGNORECASE
                                             )
-    locationPatternToSpace=re.sub(r'[-,]',
+    locationPatternToSpace=re.sub(r'[-,()]',
                                             ' ',
                                             locationPatterneRemoved,
                                             flags=re.IGNORECASE
                                             )
     optimized_searched_location = locationPatternToSpace
-    print("- match optimized name:  '"+ optimized_searched_location +"'")
+    if debug : print(" (optimized name for better matching:  '"+ optimized_searched_location +"')")
     # 1) Try to find an existing OALocation
     OaLocationsIndex = {}
     for location in allOaLocations:
@@ -54,13 +54,13 @@ def get_or_create_oa_location(searched_location:str, access_token: str)->str:
     # returns a list of tuples (name adress , score , OAuid)
     results = process.extract(optimized_searched_location, OaLocationsIndex, scorer=fuzz.token_set_ratio) or []
     if results[0] and results[0][1] > 85:  # Best matching score >85
-        print(f"- match with {results[0] }")
+        print(f"- 🎯 Location found in OA: {results[0] }")
         return results[0][2]
 
     # 2) Try to create an OALocation
     response = post_location(access_token, searched_location, searched_location)
     if not response or not response.get('location', {}).get('uid'):
-        print("-> Returning location 'To be defined' (Could not create location on OpenAgenda)")
+        print("-> ❔ Returning location 'To be defined' (Could not create location on OpenAgenda)")
         return TBD_LOCATION_UID
 
     # Stay in rectangle covering Breizh
@@ -71,11 +71,11 @@ def get_or_create_oa_location(searched_location:str, access_token: str)->str:
         and 47 < float(lat) < 49
         and -5.5 < float(long) < -1 
         ):
-        print(f"-> New OA location created : {new_oa_location['name']}, {new_oa_location['address']}")
+        print(f"-> '\U0001f195' New OA location created : {new_oa_location['name']}, {new_oa_location['address']}")
         return new_oa_location['uid']
     else:
         delete_location(access_token, new_oa_location['uid'])
-        print(f"->  Location not in Breizh: returning 'To be defined' location")
+        print(f"-> ❔ Location not in Breizh: returning 'To be defined' location")
         return TBD_LOCATION_UID
 
 def get_locations_list(searched_location:str, access_token: str)->list:
@@ -108,34 +108,36 @@ def get_locations_list(searched_location:str, access_token: str)->list:
 #####################
 
 locations_examples = [
-    {"input_location": 'MJC Tregunc Le Sterenn, Rue Jacques Prévert, 29910 Trégunc, France'},
-    {"input_location": 'Explore'},
-    {"input_location": "Bar de Test, 1 Pl. de l'Église, 29100 Pouldergat"}, # Lieu inexistant mais ville existante
-    {"input_location": 'qsdfg'}, # Texte aléatoire
-    {"input_location": '30 Rue Edgar Degas, 72000 Le Mans'}, # HOrs Bretagne
+    {"input_location": 'MJC Tregunc Le Sterenn, Rue Jacques Prévert, 29910 Trégunc, France', "expectedUID": 89326663},
+    {"input_location": 'Explore', "expectedUID": 5705265},
+    {"input_location": "Bar de Test, 1 Pl. de l'Église, 29100 Pouldergat", "expectedUID": TBD_LOCATION_UID}, # Lieu inexistant mais ville existante
+    {"input_location": 'qsdfg', "expectedUID": TBD_LOCATION_UID}, # Texte aléatoire
+    {"input_location": '30 Rue Edgar Degas, 72000 Le Mans', "expectedUID": TBD_LOCATION_UID}, # HOrs Bretagne
     {"input_location": '11 Lieu-dit Quilinen 29510 Landrévarzec'}, # Non répertorié sur OA
-    {"input_location": 'La Loco'},
-    {"input_location": 'Boulevard de la Gare, Quimperlé'},
-    {"input_location": 'La Caserne Concarneau '},
+    {"input_location": 'La Loco', "expectedUID": 34261153},
+    {"input_location": 'Boulevard de la Gare, Quimperlé', "expectedUID": 34261153},
+    {"input_location": 'La Caserne Concarneau ', "expectedUID": 9308588},
     {"input_location": '1 avenue Docteur NICOLAS, Concarneau'},
-    {"input_location": 'Intermarché Concarneau (Route de Trégunc, Concarneau)'},
-    {"input_location": 'Brasserie Tri Martolod-Officiel'}
+    {"input_location": 'Intermarché Concarneau (Route de Trégunc, Concarneau)', "expectedUID": 75052765},
+    {"input_location": 'Brasserie Tri Martolod-Officiel', "expectedUID": 16309876},
+    {"input_location": 'Rue de Colguen, 29900 Concarneau', "expectedUID": 24412066},
+    {"input_location": 'Boulevard de la Gare, 29300 Quimperlé, France', "expectedUID": 34261153},
     
 ]
 
 def test_locations(location_array):
     SECRET_KEY = os.getenv("OA_SECRET_KEY")
     access_token = retrieve_access_token(SECRET_KEY)
-    
-    nbr_locations= len(get_locations(access_token))
+    allLocationsOA = get_locations(access_token)
+    allLocationsOA_by_uid = {item['uid']: item for item in allLocationsOA}
+    nbr_locations= len(allLocationsOA)
     print(f"Number of locations: {nbr_locations}")
     for loc in location_array:
-        optimized_searched_location=re.sub(r'\b(?:concarneau|(?:29|56)\d{3})\b',
-                                            '',
-                                            loc['input_location'],
-                                            flags=re.IGNORECASE
-                                            )
-        uid = get_or_create_oa_location( optimized_searched_location,access_token)
+        uid = get_or_create_oa_location( loc.get("input_location"),access_token, debug=True)
+        if loc.get("expectedUID") and (loc.get("expectedUID") == uid): 
+            print(" - ✅ Match with Expected location.")
+        elif loc.get("expectedUID"): 
+            print(" - ❌ Does not match with Expected location: '", allLocationsOA_by_uid.get (loc.get("expectedUID")).get("name"),"'")
         print("--------------\n")
 
 if __name__ == "__main__":
