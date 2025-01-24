@@ -1,4 +1,6 @@
-import datetime
+"""
+Script to import events from a private Facebook calendar (ICS file)
+"""
 import sys,os
 from git import Repo
 import json
@@ -7,9 +9,10 @@ import json
 git_root = Repo(search_parent_directories=True).working_tree_dir
 sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
 
+import datetime
 from ICS_utils import pull_upcoming_ics_events
 from getOaLocation import get_or_create_oa_location
-from utils import print_well_json
+from HttpRequests import get_events
 from HttpRequests import( 
         retrieve_access_token,
         get_uid_from_name_date,
@@ -32,48 +35,47 @@ def import_ics(ics_url):
     # TO DO
     # Removed stylished text with weird fonts, like in https://yaytext.com/unstyle/
     # Unidecode ? https://pypi.org/project/Unidecode/
-    
+
     ics_events = pull_upcoming_ics_events(ics_url)
     print(f"Total number of events on ICS : {len(ics_events)}\n")
-    access_token = retrieve_access_token(SECRET_KEY)
+    
+    eventsOa: list=get_events(params={"relative[0]": "upcoming", "relative[1]": "current", "detailed": 1, "monolingual": "fr"})
+    print(f"Total number of future events on Oa : {len(eventsOa)}\n")
+    uidsExterneOa = [event["uid-externe"] for event in eventsOa if "uid-externe" in event]
+    
     new_events_nbr=0
     logContent=[]
+    access_token = retrieve_access_token(SECRET_KEY)
     for i, ics_event in enumerate(ics_events):
         try:
             event_title = ics_event.get('title').get('fr')
+            uidExterneIcsEvent = ics_event.get("uid-externe")
             print(f"Processing event N°{i} - '{event_title}'")
-            # find if event is already imported. Search by name around start time
-            # TO DO : replace this multiple call to API by :
-            #   - retrieve all current and future events
-            #   - check if uid_externe value exists in list
-            uid_externe = get_uid_from_name_date( PUBLIC_KEY,
-                                                event_title, 
-                                                ics_event.get('timings')[0].get('begin').split("T")[0],
-                                                uid_externe=True
-                                                )
+            # create event log in case of error
             eventLog = {
                     "ics-id": i,
-                    "uid-externe" : ics_event.get("uid-externe"),
+                    "uid-externe" : uidExterneIcsEvent,
                     "title" : event_title,
                     "url": ics_event.get('onlineAccessLink')
                 }
-            if not uid_externe  :
-                # Get OA location from facebook location infos (locationTXT)
-                location_uid = get_or_create_oa_location(ics_event.get('locationTXT'), access_token)
-                ics_event.update( {"locationUid": location_uid })
-                ics_event.pop( "locationTXT" )
-                
-                # Creates the event
-                response = create_event(access_token, ics_event)
-                if response['event']['uid']:
-                    eventLog["import_status"] = "New event"
-                    new_events_nbr += 1
-                    eventLog["OaUrl"] = "https://openagenda.com/fr/" + response['event']['originAgenda']['slug'] + "/events/" + response['event']['slug']
-                    print("\n")
-                else:
-                    print( f"Problem for {event_title}\n" )
-                    eventLog["import_status"] = "Error posting event on OA"
-                    eventLog["error"]= response
+            # find if event is already imported.
+            if uidExterneIcsEvent in uidsExterneOa:
+                continue
+            # Get OA location from facebook location infos (locationTXT)
+            location_uid = get_or_create_oa_location(ics_event.get('locationTXT'), access_token)
+            ics_event.update( {"locationUid": location_uid })
+            ics_event.pop( "locationTXT" )
+            
+            # Creates the event
+            response = create_event(access_token, ics_event)
+            if response['event']['uid']:
+                eventLog["import_status"] = "New event"
+                new_events_nbr += 1
+                eventLog["OaUrl"] = "https://openagenda.com/fr/" + response['event']['originAgenda']['slug'] + "/events/" + response['event']['slug']
+            else:
+                print( f"Problem for {event_title}\n" )
+                eventLog["import_status"] = "Error posting event on OA"
+                eventLog["error"]= response
 
         except Exception as e:
             print(f"Error: {e} \n" )
