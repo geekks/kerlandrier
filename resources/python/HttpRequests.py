@@ -11,8 +11,7 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 
 import math, random
 import requests, json
-import time, datetime, pytz, dateparser
-from utils import print_well_json
+import time, pytz, dateparser
 
 # Chargement des variables d'environnement
 OA_PUBLIC_KEY = os.getenv('OA_PUBLIC_KEY')
@@ -85,7 +84,7 @@ def get_locations(access_token):
                     "access-token": access_token,
                     "nonce": get_nonce()
                     }
-            response = requests.get(url, headers=headers, params={'after': after})
+            response = requests.get(url, headers=headers, params={'after': after, 'detailed': 1})
             response.raise_for_status()
             locations_part=json.loads(response.text)
             all_locations.extend(locations_part.get('locations'))
@@ -104,7 +103,7 @@ def post_location(access_token, name, adresse):
         name (str): The name of the new location
         adresse (str): The address of the new location
     Returns:
-        The JSON response of the API call
+        JSON of the created location, under the key 'location'
     """
     headers = {
         "Content-Type": 'application/json',
@@ -132,6 +131,36 @@ def post_location(access_token, name, adresse):
             # print("No existing address found by OA API")
         return None
 
+def patch_location(access_token:str, body: dict):
+    """
+    Modify an  OpenAgenda location using a PATCH call. Only modified parameters are needed.
+    Args:
+        access_token (str): The access token obtained by calling `retrieve_access_token`
+        body (dict): parameters to be updated. 
+                {"uid"="aaa",{"description":{"fr":"AVEN"}}}
+    }
+    Returns:
+        JSON of the updated location, under the key 'location'
+    """
+    headers = {
+        "Content-Type": 'application/json',
+        "access-token": access_token,
+        "nonce": get_nonce(),
+    }
+    if (type(body) is not dict) or (body.get('uid')) is None : return None
+    url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/locations"
+
+    try:
+        response = requests.patch(url, json=body, headers=headers)
+        response.raise_for_status()
+        return response.json()
+
+    except requests.exceptions.RequestException as exc:
+        text_json = json.loads(exc.response.text)
+        print(f"Error Patching location on OA: {exc}")
+        return None
+
+
 def delete_location(access_token, location_uid):
     headers = {
         "Content-Type": 'application/json',
@@ -151,6 +180,18 @@ def delete_location(access_token, location_uid):
 
 
 def get_events( params: dict):
+    """
+    Retrieve events from OpenAgenda API with given parameters.
+    Args:
+        params (dict): The parameters to pass to the API call.
+            https://developers.openagenda.com/10-lecture/
+            exemple: {'relative[]': 'current',
+                    'search': 'conference',
+                    'detailled': 1,
+                    'monolingual': 'fr'}
+    Returns:
+        A list of events, or None if an error occurs.
+    """
     headers = {
         "Content-Type": 'application/json',
         "nonce": get_nonce()
@@ -160,7 +201,8 @@ def get_events( params: dict):
     all_events=[]
     while after is not None:
         try:
-            response = requests.get(url,headers=headers,params=params)
+            paramsUp =  params | {'after': after} if after != 0 else params
+            response = requests.get(url,headers=headers,params=paramsUp)
             response.raise_for_status()
             events_part=json.loads(response.text)
             all_events.extend(events_part.get('events'))
@@ -280,3 +322,39 @@ def get_uid_from_name_date(pub_key: str ,event_name:str, text_date:str = None, u
         uid= search_result["events"][0].get("uid-externe") if uid_externe else search_result["events"][0].get("id")
         return uid
     return None
+
+#####################
+## Tests:
+#####################
+
+searchParamsTests = [
+                    {
+                    'relative[0]': 'current',
+                    'detailled': 1,
+                    'monolingual': 'fr'},
+                    {
+                    'relative[0]': 'current',
+                    # 'relative[1]': 'upcoming',
+                    'search': 'concert',
+                    'detailled': 1,
+                    'monolingual': 'fr'},
+                    {
+                    'relative[1]': 'upcoming',
+                    'search': 'concert',
+                    'detailled': 1,
+                    'monolingual': 'fr'},
+    
+]
+
+if __name__ == "__main__":
+    for index, paramTest in enumerate(searchParamsTests):
+        print( "--- parmas test n°" + str(index) + "---" )
+        events = get_events(paramTest)
+        print("nombre d'events: ",len(events))
+        if len(events) == 0: continue
+        print("Noms: ")
+        events_title =[]
+        for event in events:
+            events_title.append(event.get('uid-externe') if event.get('uid-externe') else event.get('title'))
+        print(*events_title,  sep="; ")
+            
