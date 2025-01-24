@@ -25,11 +25,9 @@ const cornouailleCities=['Aber-Wrac\'h','Quimper','Pont-l\'Abbé','Briec','Douar
   'Léchiagat','Ergué Gaberic','Ergué-Gabéric','Chateaulin','Châteaulin','Plobannalec',
   'Plobannalec-Lesconil','Pluguffan','Trégornan','Combrit','Île-Tudy','Saint-Goazec',
   'Saint-Brieuc','Plomelin','Clohars-Carnoët','Clohars-Fouesnant','Quéménéven', 'Le Faouët', 'Locronan',
-  'Tréguennec', 'Coray', 'Châteauneuf-du-Faou', 'Plomodiern'];
+  'Tréguennec', 'Coray', 'Châteauneuf-du-Faou', 'Plomodiern', 'Plouhinec'];
 
-const bretagneCities= ['Rennes','Malestroit','Quéven','Malguénac','Landerneau','Mellionnec','Brest',
-  'Bréal-sous-Montfort','Pont-Scorff','Ploemeur','Plœmeur','Guingamp','Baud','Lorient','Hennebont','Plonéour-Lanvern',
-  'Loperhet', 'Saint-Renan', 'Loqueffret', 'Inzinzac-Lochrist'];
+const breizhPostal = ['29', '56', '22', '35']; // Postal code of Bretagne
 
 // TO DO: lowercase + slugify location name for better matching
 
@@ -52,17 +50,17 @@ const bretagneCities= ['Rennes','Malestroit','Quéven','Malguénac','Landerneau'
           await oa.locations.patch(AGENDA_UID, location.uid, { description: {fr: "CORNOUAILLE"} })
           console.log("Lieu: '"+ location.name + "' ajouté dans", "CORNOUAILLE" )
         }
-      else if (bretagneCities.includes(location.city)) {
+      else if (breizhPostal.includes(location.postalCode.slice(0, 2)))  {
           await oa.locations.patch(AGENDA_UID, location.uid, { description: {fr: "BRETAGNE"} })
           console.log("Lieu: '"+ location.name + "' ajouté dans", "BRETAGNE" )
         }
       else {
-        console.log("Pas de catégorie pour lieu : '"  + location.name + "'" + 
+        console.log("🔴 Pas de catégorie pour lieu : '"  + location.name + "'" + 
           " .Adresse: " + location.address + ", " + location.city +  ", "  + JSON.stringify(location.description))
-        console.log("  -> Ajouter la ville à la bonne catégorie ?" )
+        console.log("  -> Ajouter la ville dans un des territoires dans le script: AVEN, CORNOUAILLE, BRETAGNE" )
       }
     }
-    fs.writeFile(file='./resources/updateLocationsDescription.txt', 
+    fs.writeFile(file='./resources/updateLocationsDescription.log', 
                 callback = "[" + locationsUrls.join('\n') + "]",
                 function (err) {if (err) return console.log(err)}
               )
