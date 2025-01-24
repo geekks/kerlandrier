@@ -187,7 +187,7 @@ def get_events( params: dict):
             https://developers.openagenda.com/10-lecture/
             exemple: {'relative[]': 'current',
                     'search': 'conference',
-                    'detailled': 1,
+                    'detailed': 1,
                     'monolingual': 'fr'}
     Returns:
         A list of events, or None if an error occurs.
@@ -289,7 +289,7 @@ def search_events( pub_key: str, search_string:str, past_events:bool  = False, o
     }
     params = {
         "search": search_string,
-        "detailled": 1,
+        "detailed": 1,
         "monolingual":"fr",
         "nonce": get_nonce()
     }
@@ -330,18 +330,18 @@ def get_uid_from_name_date(pub_key: str ,event_name:str, text_date:str = None, u
 searchParamsTests = [
                     {
                     'relative[0]': 'current',
-                    'detailled': 1,
+                    'detailed': 1,
                     'monolingual': 'fr'},
                     {
                     'relative[0]': 'current',
                     # 'relative[1]': 'upcoming',
                     'search': 'concert',
-                    'detailled': 1,
+                    'detailed': 1,
                     'monolingual': 'fr'},
                     {
                     'relative[1]': 'upcoming',
                     'search': 'concert',
-                    'detailled': 1,
+                    'detailed': 1,
                     'monolingual': 'fr'},
     
 ]

@@ -1,9 +1,10 @@
 """_summary_
 Ajoute un classement géographique à tous les lieux ('location') d'OpenAgenda
-dans le champ "description". Les catégors sont:
+dans le champ "description". Les catégories sont:
 - Aven
 - Cornouaille
 - Bretagne
+Et valide le lieux dans OA ("state": 1 )
 Les maigres sources: 
 - https://fr.wikipedia.org/wiki/Pays_de_Bretagne#/media/Fichier:Pays_Bretagne_map.jpg
 -  http://www.heritaj.bzh/website/image/ir.attachment/4925_2e00c37/datas
@@ -22,7 +23,6 @@ from HttpRequests import(
         patch_location,
         )
 
-AGENDA_UID = os.getenv("AGENDA_UID")
 SECRET_KEY = os.getenv("OA_SECRET_KEY")
 
 aven_cities = [
@@ -49,16 +49,17 @@ print(f"Nombre total de lieux: {len(locations)}")
 
 if locations and len(locations) > 1:
     for location in locations:
-        if location.get("description").get('fr').upper() in ["AVEN", "CORNOUAILLE", "BRETAGNE"]:
+        desc = location.get("description").get('fr')
+        if desc and desc.upper() in ["AVEN", "CORNOUAILLE", "BRETAGNE"]:
             continue
         if location.get("city") in aven_cities:
-            patch_location(AGENDA_UID, location["uid"], {"description": {"fr": "AVEN"}})
+            patch_location( location["uid"], {"description": {"fr": "AVEN"}, "state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans AVEN")
         elif location.get("city") in cornouaille_cities:
-            patch_location(AGENDA_UID, location["uid"], {"description": {"fr": "CORNOUAILLE"}})
+            patch_location( location["uid"], {"description": {"fr": "CORNOUAILLE"},"state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans CORNOUAILLE")
         elif location.get("postalCode", "")[:2] in breizh_postal:
-            patch_location(AGENDA_UID, location["uid"], {"description": {"fr": "BRETAGNE"}})
+            patch_location( location["uid"], {"description": {"fr": "BRETAGNE"},"state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans BRETAGNE")
         else:
             print(f"🔴 Pas de catégorie pour lieu : '{location['name']}' . Adresse: {location.get('address')}, {location.get('city')}, {json.dumps(location.get('description'))}")
