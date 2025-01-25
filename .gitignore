@@ -16,3 +16,5 @@ __pycache__
 *.bak
 *.BAK
 .ipynb_checkpoints
+
+.venv
