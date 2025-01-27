@@ -10,10 +10,10 @@ git_root = Repo(search_parent_directories=True).working_tree_dir
 sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
 
 import requests
-from ics import Calendar
+import icalendar
 from datetime import datetime, timedelta
 from slugify import slugify
-from scraping_utils import strip_html
+import re
 import unicodedata
 
 def pull_upcoming_ics_events(ics_url: str)-> list[dict]:
@@ -25,23 +25,29 @@ def pull_upcoming_ics_events(ics_url: str)-> list[dict]:
     # Fetch and parse the ICS file
     response = requests.get(ics_url)
     response.raise_for_status()
-    calendar = Calendar(  response.text.replace('\"', "'" ))
+    
+    # add default organizer to avoid import error
+    # Regex pour capturer le groupe contenant un ":" avant ":MAILTO"
+    pattern = r"(CN=.*?:.*?\:MAILTO)"
+    icsCleaned =response.text.replace("ORGANIZER:MAILTO", "ORGANIZER;CN=Inconnu:MAILTO")
+    icsCleaned = re.sub(pattern, lambda m: m.group(1).replace(":", "-"), icsCleaned)
+    calendar =icalendar.Calendar.from_ical(icsCleaned)
 
-    for ics_event in calendar.events:
+    for ics_event in calendar.walk("VEVENT"):
         timings = []
         
         # Check if the event is in the future
-        if ics_event.end.int_timestamp > datetime.timestamp(datetime.now()):
+        if datetime.timestamp(ics_event.end) > datetime.timestamp(datetime.now()):
             # Handle timings (split into max 24h intervals if needed)
-            event_duration = ics_event.end - ics_event.begin
+            event_duration = ics_event.duration
             if event_duration < timedelta(hours=24):
                 timings.append({
-                    "begin": ics_event.begin.isoformat(),
+                    "begin": ics_event.start.isoformat(),
                     "end": ics_event.end.isoformat()
                 })
             else:
                 # Split into 24-hour intervals
-                begin = ics_event.begin
+                begin = ics_event.start
                 end = ics_event.end
                 while begin < end:
                     next_end = min(begin + timedelta(hours=24), end)
@@ -52,19 +58,20 @@ def pull_upcoming_ics_events(ics_url: str)-> list[dict]:
                     begin = next_end
 
             # Clean up the event description
-            description =  unicodedata.normalize('NFKC', ics_event.description) if hasattr(ics_event, "description") else ""
-            short_description=description.split("\n")[0][:150] # 200 characters max in short description
+            description =  unicodedata.normalize('NFKC', str(ics_event.get('DESCRIPTION')) ) if ( 'DESCRIPTION' in ics_event) else "Pas de description"
+            name = unicodedata.normalize('NFKC', str(ics_event.get('SUMMARY')) ) if ('SUMMARY' in ics_event ) else "Nom inconnu"
+            short_description= description.split("\n")[0][:150] # 200 characters max in short description
             
             # Prepare the OpenAgenda event structure
             new_oa_event = {
-                "uid-externe": ics_event.uid,
-                "slug": slugify(ics_event.name),
-                "title": {"fr": unicodedata.normalize('NFKC', ics_event.name)},
+                "uid-externe": str(ics_event.get('UID')),
+                "slug": slugify(name),
+                "title": {"fr": name},
                 "description": {"fr": f"{short_description or ''}"},
-                "locationTXT": ics_event.location,
+                "locationTXT": str(ics_event.get('LOCATION')),
                 "longDescription": {"fr": description},
                 "timings": timings,
-                "onlineAccessLink": ics_event.url if hasattr(ics_event, "url") else None,
+                "onlineAccessLink": ics_event.get('url') if ("URL" in ics_event) else None,
                 "attendanceMode": 3,  # 1: physical, 2: online, 3: hybrid
             }
             upcoming_ics_events.append(new_oa_event)

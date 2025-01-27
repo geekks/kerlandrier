@@ -39,7 +39,10 @@ def import_ics(ics_url):
     ics_events = pull_upcoming_ics_events(ics_url)
     print(f"Total number of events on ICS : {len(ics_events)}\n")
     
-    eventsOa: list=get_events(params={"relative[0]": "upcoming", "relative[1]": "current", "detailed": 1, "monolingual": "fr"})
+    eventsOa: list=get_events(params={"relative[0]": "upcoming", "relative[1]": "current",
+                                    "detailed": 1,
+                                    "monolingual": "fr",
+                                    "state[0]":2, "state[1]":1, "state[2]":0, "state[3]":-1}) # get refused/removed events to avoid recreating it
     print(f"Total number of future events on Oa : {len(eventsOa)}\n")
     uidsExterneOa = [event["uid-externe"] for event in eventsOa if "uid-externe" in event]
     
@@ -50,7 +53,7 @@ def import_ics(ics_url):
         try:
             event_title = ics_event.get('title').get('fr')
             uidExterneIcsEvent = ics_event.get("uid-externe")
-            print(f"Processing event N°{i} - '{event_title}'")
+            # print(f"Processing event N°{i} - '{event_title}'")
             # create event log in case of error
             eventLog = {
                     "ics-id": i,
