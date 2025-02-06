@@ -233,7 +233,11 @@ def create_event(access_token, event, image_path=None):
             print(f"Response:")
             print(json.dumps(event_creation_response.json(), indent=4))
             return None
-        print('event "'+ event['title']['fr'] + '" created with uid: ' + str(json.loads(event_creation_response.text)['event']['uid']) )
+        createdEvent= json.loads(event_creation_response.text)['event']
+        print('event "'+ event['title']['fr'] + '" created with uid: ' + str(createdEvent['uid']) )
+        # Get event OA URL if location not defined to correct it
+        if str(createdEvent['location']['uid']) == TBD_LOCATION_UID:
+            print("OA event URL: "+ "https://openagenda.com/kerlandrier/contribute/event/"+str(createdEvent['uid']))
         return  event_creation_response.json()
 
     except requests.exceptions.RequestException as exc:
@@ -312,6 +316,7 @@ def get_uid_from_name_date(pub_key: str ,event_name:str, text_date:str = None, u
     if date and date.tzinfo != 'Europe/Paris': date = date.astimezone(paris_zone)
     if date: 
         params={"timings":{
+                        # TO DO: dynamic change in summer/winter time
                         "gte": date.strftime("%Y-%m-%dT00:00:00+02:00"),
                         "lte": date.strftime("%Y-%m-%dT23:59:59+02:00")
                         }

@@ -79,7 +79,7 @@ def import_ics(ics_url):
                 print( f"Problem for {event_title}\n" )
                 eventLog["import_status"] = "Error posting event on OA"
                 eventLog["error"]= response
-
+            print("--------")
         except Exception as e:
             print(f"Error: {e} \n" )
             eventLog["import_status"] = "Error processing event"
