@@ -16,6 +16,9 @@ import re
 import dateparser
 import pytz
 
+from difflib import SequenceMatcher
+from wasabi import color
+
 def print_well_json(data)->None:
     """ display a well formatted json in console"""
     wellJson= json.dumps(data, indent=4, ensure_ascii=False)
@@ -77,3 +80,18 @@ def get_end_date(start_date: datetime.datetime,duree: str) -> datetime.datetime:
     else:
         raise ValueError("start_date is None")
         return None
+
+def showDiff(a:str, b:str):
+    output = []
+    matcher = SequenceMatcher(None, a, b)
+    for opcode, a0, a1, b0, b1 in matcher.get_opcodes():
+        if opcode == "equal":
+            output.append(a[a0:a1])
+        elif opcode == "insert":
+            output.append(color(b[b0:b1], fg=16, bg="green"))
+        elif opcode == "delete":
+            output.append(color(a[a0:a1], fg=16, bg="red"))
+        elif opcode == "replace":
+            output.append(color(b[b0:b1], fg=16, bg="green"))
+            output.append(color(a[a0:a1], fg=16, bg="red"))
+    return "".join(output)

@@ -1,0 +1,4 @@
+sources/*
+!sources/.gitkeep
+# Image test file
+!sources/TEST_temps_foret.jpg
