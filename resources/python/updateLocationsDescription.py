@@ -52,15 +52,19 @@ if locations and len(locations) > 1:
         desc = location.get("description").get('fr')
         if desc and desc.upper() in ["AVEN", "CORNOUAILLE", "BRETAGNE"]:
             continue
+        
         if location.get("city") in aven_cities:
-            patch_location( location["uid"], {"description": {"fr": "AVEN"}, "state": 1 })
+            patch_location( access_token, location["uid"], {"description": {"fr": "AVEN"}, "state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans AVEN")
+            
         elif location.get("city") in cornouaille_cities:
-            patch_location( location["uid"], {"description": {"fr": "CORNOUAILLE"},"state": 1 })
+            patch_location( access_token, location["uid"], {"description": {"fr": "CORNOUAILLE"},"state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans CORNOUAILLE")
+            
         elif location.get("postalCode", "")[:2] in breizh_postal:
-            patch_location( location["uid"], {"description": {"fr": "BRETAGNE"},"state": 1 })
+            patch_location( access_token, location["uid"], {"description": {"fr": "BRETAGNE"},"state": 1 })
             print(f"Lieu: '{location['name']}' ajouté dans BRETAGNE")
+            
         else:
             print(f"🔴 Pas de catégorie pour lieu : '{location['name']}' . Adresse: {location.get('address')}, {location.get('city')}, {json.dumps(location.get('description'))}")
             print("  -> Ajouter la ville dans un des territoires dans le script: AVEN, CORNOUAILLE, BRETAGNE")

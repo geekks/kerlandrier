@@ -28,19 +28,21 @@ def get_or_create_oa_location(searched_location:str, access_token: str, debug:bo
     Returns an OALocation UID (found, created or default one.)
     """
     print("- searching location for : '"+ searched_location +"'")
-    
+    if (searched_location == None ) or (searched_location.lower() in ( "" , "none", "null")):
+        print("InputLocation is null or empty. Returning default Location")
+        return TBD_LOCATION_UID
     allOaLocations = get_locations(access_token)
     if not searched_location or not allOaLocations:
         print("[ERROR] inputLocation is null or OA Locations list is empty")
         return None
     
     # 0) Use optimized searched, removing false positives and misleadings patterns
-    locationPatterneRemoved=re.sub(r'\b(?:concarneau|(?:29|56)\d{3}|officiel|quimperl(?:e|é)|france)\b',
+    locationPatterneRemoved=re.sub(r'\b(?:concarneau|(?:29|56)\d{3}|officiel|quimperl(?:e|é)|france |spectacles)\b',
                                             '',
                                             searched_location,
                                             flags=re.IGNORECASE
                                             )
-    locationPatternToSpace=re.sub(r'[-,()]',
+    locationPatternToSpace=re.sub(r'[-,():]',
                                             ' ',
                                             locationPatterneRemoved,
                                             flags=re.IGNORECASE

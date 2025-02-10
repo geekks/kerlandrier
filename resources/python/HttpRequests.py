@@ -131,32 +131,33 @@ def post_location(access_token, name, adresse):
             # print("No existing address found by OA API")
         return None
 
-def patch_location(access_token:str, body: dict):
+def patch_location(access_token:str, location_uid: str, body: dict):
     """
     Modify an  OpenAgenda location using a PATCH call. Only modified parameters are needed.
     Args:
         access_token (str): The access token obtained by calling `retrieve_access_token`
+        location_uid (str): The uid of the location
         body (dict): parameters to be updated. 
                 {"uid"="aaa",{"description":{"fr":"AVEN"}}}
     }
     Returns:
-        JSON of the updated location, under the key 'location'
+        JSON of the updated location
     """
     headers = {
         "Content-Type": 'application/json',
         "access-token": access_token,
         "nonce": get_nonce(),
     }
-    if (type(body) is not dict) or (body.get('uid')) is None : return None
-    url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/locations"
+    if (type(body) is not dict): 
+        raise TypeError("body must be a dict")
+    url = f"https://api.openagenda.com/v2/agendas/{AGENDA_UID}/locations/{location_uid}"
 
     try:
         response = requests.patch(url, json=body, headers=headers)
         response.raise_for_status()
-        return response.json()
+        return response.json().get('location')
 
     except requests.exceptions.RequestException as exc:
-        text_json = json.loads(exc.response.text)
         print(f"Error Patching location on OA: {exc}")
         return None
 
@@ -235,9 +236,10 @@ def create_event(access_token, event, image_path=None):
             return None
         createdEvent= json.loads(event_creation_response.text)['event']
         print('event "'+ event['title']['fr'] + '" created with uid: ' + str(createdEvent['uid']) )
-        # Get event OA URL if location not defined to correct it
+        # Print OA URL if location is set to DEFAULT to post manually correct it
         if str(createdEvent['location']['uid']) == TBD_LOCATION_UID:
             print("OA event URL: "+ "https://openagenda.com/kerlandrier/contribute/event/"+str(createdEvent['uid']))
+        
         return  event_creation_response.json()
 
     except requests.exceptions.RequestException as exc:
