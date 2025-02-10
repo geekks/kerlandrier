@@ -9,7 +9,7 @@ from git import Repo
 git_root = Repo(search_parent_directories=True).working_tree_dir
 sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
 
-import datetime
+from datetime import datetime, timedelta, date
 import json, csv
 import re
 
@@ -47,7 +47,7 @@ def validate_OAevent_format(event:dict) -> bool:
         print( "timing_begin",timing.get("begin"))
         parsedDateBegin = dateparser.parse(timing.get("begin"))
         parsedDateEnd = dateparser.parse(timing.get("end"))
-        now = datetime.datetime.now(pytz.timezone("Europe/Paris"))
+        now = datetime.now(pytz.timezone("Europe/Paris"))
         if (parsedDateBegin <  now) or (parsedDateEnd >  now):
             raise ValueError(f"Error: event  {event.get('title')} not in past. Start : {parsedDateBegin}, End : {parsedDateEnd}")
     # Example validation: check if keywords are not empty
@@ -57,7 +57,7 @@ def validate_OAevent_format(event:dict) -> bool:
         raise ValueError(f"URL not valid: {event.get("links")}")
     return True
 
-def get_end_date(start_date: datetime.datetime,duree: str) -> datetime.datetime: 
+def get_end_date(start_date: datetime,duree: str) -> datetime: 
     """
     Get end_date (DateTime) from start_date (DateTime) and duration (Str like "2h 30min")
     Default "duree" if not correct or provided : 2h
@@ -74,7 +74,7 @@ def get_end_date(start_date: datetime.datetime,duree: str) -> datetime.datetime:
             minutes = int( re.match(pattern_ymin, duree).group(1) or 0)
         hr =( hours, minutes)
         end_date=   ( start_date
-                        + datetime.timedelta(hours=hr[0], minutes=hr[1] )
+                        + timedelta(hours=hr[0], minutes=hr[1] )
                     )
         return end_date
     else:
@@ -95,3 +95,18 @@ def showDiff(a:str, b:str):
             output.append(color(b[b0:b1], fg=16, bg="green"))
             output.append(color(a[a0:a1], fg=16, bg="red"))
     return "".join(output)
+
+def convertDate(date_obj:date|datetime, period:str)->datetime:
+    if isinstance(date_obj, datetime):
+        return date_obj
+    elif isinstance(date_obj, date):
+        datetime_obj = datetime.combine(date_obj, datetime.min.time())
+        pytz.timezone("Europe/Paris").localize(datetime_obj)
+        if period == "start":
+            return datetime_obj.replace(hour=10, minute=30)
+        elif period == "end":
+            return datetime_obj.replace(hour=17, minute=30)
+        else:
+            raise ValueError(f"period parameter \'{period}\' is not valid or must be defined")
+    else:
+        raise ValueError(f"date_obj {date_obj} is not a date or datetime object")
