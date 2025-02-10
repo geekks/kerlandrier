@@ -11,15 +11,20 @@ sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python
 
 import base64
 from mistralai import Mistral
-from pprint import pprint
 from pydantic import BaseModel
-import argparse
-from PIL import Image
-from utils import showDiff
 
+from slugify import slugify
+import argparse
+from pprint import pprint
+from PIL import Image
+from utils import get_end_date, showDiff
+from HttpRequests import create_event, retrieve_access_token
+from getOaLocation import get_or_create_oa_location
+from  dateparser import parse
 
 
 MISTRAL_PRIVATE_API_KEY = os.getenv("MISTRAL_PRIVATE_API_KEY")
+SECRET_KEY = os.getenv("OA_SECRET_KEY")
 
 # Define a class to contain the Mistral answer to a formatted JSON
 class Event(BaseModel):
@@ -69,7 +74,7 @@ def getMistralImageEvent(image_path:str)->Event:
                     titre,\
                     date_debut (date de début au format ISO, sur le fuseau horaire de Paris, dans l'année 2025),\
                     heure_debut (heure de début au format hh:mm),\
-                    duree (durée de l'évenementau format hh:mm, avec 0 en durée par défaut si la durée n'est pas indisquée sur l'affiche),\
+                    duree (durée de l'évenementau format hh:mm, avec 2 en durée par défaut si la durée n'est pas indisquée sur l'affiche),\
                     lieu (le nom du lieu ou l'adresse du lieu),\
                     description (les apostrophes sont notées avec le caractère ’ et pas '),\
                     description_courte (un résumé de l'évènement en 1 phrase)"
@@ -118,7 +123,7 @@ if __name__ == "__main__":
     
     parser=argparse.ArgumentParser()
     parser.add_argument("-f", "--fileName",help="Image file name in images/sources path ")
-    parser.add_argument("test",help="Test command with {TEST_FILE_NAME}")
+    parser.add_argument( "--test",help="Test command with {TEST_FILE_NAME}")
     args=parser.parse_args()
     
     if args.fileName:
@@ -129,6 +134,28 @@ if __name__ == "__main__":
         response_json = response.model_dump(mode='json')
         print("Mistral answer:")
         pprint(response_json)
+        
+        access_token = retrieve_access_token(SECRET_KEY)
+        
+        OaLocationUid = get_or_create_oa_location(response.lieu, access_token)
+        eventOA= {
+                    "uid-externe": "mistral-" + slugify(response.titre),
+                    "title": { "fr": response.titre } ,
+                    "description": { "fr": response.description_courte},
+                    "locationUid": OaLocationUid,
+                    "longDescription": response.description, 
+                    "timings": [
+                            {
+                            "begin": response.date_debut,
+                            "end": get_end_date(parse(response.date_debut), response.duree).isoformat()
+                            },
+                            ]
+                }
+        try:
+            create_event(access_token, eventOA, image_path)
+        except Exception as e:
+            print(f"Error creating event with Mistral for file {image_path}, \'{response.titre}\'")
+            print(f"Error creating event with Mistral: {e}")
         
     elif args.test:
         image_path = os.path.join(git_root, "images/sources", TEST_FILE_NAME)
