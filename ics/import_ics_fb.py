@@ -18,14 +18,18 @@ from HttpRequests import(
         get_uid_from_name_date,
         create_event
         )
+import argparse
 
 PUBLIC_KEY = os.getenv("OA_PUBLIC_KEY")
 SECRET_KEY = os.getenv("OA_SECRET_KEY")
-ICS_URL = os.getenv("ICS_PRIVATE_URL_KLR_FB")
+ICS_PRIVATE_URL_KLR_FB = os.getenv("ICS_PRIVATE_URL_KLR_FB")
+URL_AGENDA_ATELIERS_KAL = os.getenv("URL_AGENDA_ATELIERS_KAL")
+KAL_LOCATION_UID = os.getenv("KAL_LOCATION_UID")
+TBD_LOCATION_UID='11634941'
 
 now=datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
-def import_ics(ics_url):
+def import_ics(ics_url:str):
     """Main function to import ICS events."""
     # Fetch events from ICS
     
@@ -53,7 +57,7 @@ def import_ics(ics_url):
         try:
             event_title = ics_event.get('title').get('fr')
             uidExterneIcsEvent = ics_event.get("uid-externe")
-            # print(f"Processing event N°{i} - '{event_title}'")
+            if ics_event.get('description').get('fr') ==  0: ics_event['description']['fr'] = event_title
             # create event log in case of error
             eventLog = {
                     "ics-id": i,
@@ -64,10 +68,25 @@ def import_ics(ics_url):
             # find if event is already imported.
             if uidExterneIcsEvent in uidsExterneOa:
                 continue
-            # Get OA location from facebook location infos (locationTXT)
+            # Get OA location from facebook complete location infos (locationTXT)
             location_uid = get_or_create_oa_location(ics_event.get('locationTXT'), access_token)
             ics_event.update( {"locationUid": location_uid })
             ics_event.pop( "locationTXT" )
+            
+            #TODO: add a test function to check and add default values for alll parameters
+            
+            # Konk Ar Lab case
+            if "konkarlab.bzh" in ics_url:
+                if ics_event.get('locationUid') == TBD_LOCATION_UID:
+                    ics_event.update( {"locationUid": KAL_LOCATION_UID} )
+                ics_event['title']['fr'] = ics_event.get('title').get('fr').replace("[KAL] ", "")
+                if (ics_event["onlineAccessLink"] == None) or ( ics_event["onlineAccessLink"].lower() in ("","none", "null")):
+                    ics_event["onlineAccessLink"] = "https://www.konkarlab.bzh/infos-pratiques/agenda/"
+
+            # Switch to physical event if no URL
+            if (ics_event["onlineAccessLink"] == None) or ( ics_event["onlineAccessLink"].lower() in ("","none", "null")):
+                ics_event.pop("onlineAccessLink")
+                ics_event["attendanceMode"] = 1
             
             # Creates the event
             response = create_event(access_token, ics_event)
@@ -78,7 +97,7 @@ def import_ics(ics_url):
             else:
                 print( f"Problem for {event_title}\n" )
                 eventLog["import_status"] = "Error posting event on OA"
-                eventLog["error"]= response
+                eventLog["error"]= response if response else "No response"
             print("--------")
         except Exception as e:
             print(f"Error: {e} \n" )
@@ -95,5 +114,19 @@ def import_ics(ics_url):
     print(f"{new_events_nbr} new events created")
 
 if __name__ == "__main__":
-    import_ics(ICS_URL)
+    
+    parser=argparse.ArgumentParser()
+    parser.add_argument("-u", "---URL", "--fileName",help="ICS URL to scan. Default to private Facebook's Kerlandrier page ICS")
+    parser.add_argument("-t", "--test", required=False,help="Test command with {TEST_FILE_NAME}")
+    args=parser.parse_args()
+    match args.URL:
+        case None | ""|"facebook"|"fb":
+            icsUrl=ICS_PRIVATE_URL_KLR_FB
+        case "kal"|"konkarlab":
+            icsUrl=URL_AGENDA_ATELIERS_KAL
+        case str() as url if url.startswith('https://'):
+            icsUrl=url
+        case _:
+            exit(1,"Error with URL argument")
+    import_ics(icsUrl)
 exit(0)
