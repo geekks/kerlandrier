@@ -29,7 +29,7 @@ aven_cities = [
     "Bannalec", "Beg-Meil", "Concarneau", "Elliant", "LaForêt-Fouesnant", "Pleuven",
     "Pont-Aven", "Rosporden", "Fouesnant", "Melgven", "Moelansurmer", "Moëlan-sur-Mer",
     "Kervaziou", "Scaër", "Névez", "Nizon", "Port-la-Forêt", "Quimperlé", "Saint-Philibert",
-    "Saint-Yvi", "Tourch", "Trégunc", "La Forêt-Fouesnant", "Mellac", "Autre"
+    "Saint-Yvi", "Tourch", "Trégunc", "La Forêt-Fouesnant", "Mellac", "Querrien", "Autre"
 ]
 
 cornouaille_cities = [
@@ -40,7 +40,7 @@ cornouaille_cities = [
     "Locronan", "Tréguennec", "Coray", "Châteauneuf-du-Faou", "Plomodiern", "Plouhinec"
 ]
 
-breizh_postal = ['29', '56', '22', '35']  # Postal codes of Bretagne
+breizh_postal = ['29', '56', '22', '35', '44']  # Postal codes of Bretagne and more
 
 access_token = retrieve_access_token(SECRET_KEY)
 locations = get_locations(access_token)
