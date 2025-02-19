@@ -10,6 +10,7 @@ git_root = Repo(search_parent_directories=True).working_tree_dir
 sys.path.insert(0,   os.path.abspath(  os.path.join(  git_root,'resources/python' ) ) )
 
 import datetime
+from pprint import pprint
 from ICS_utils import pull_upcoming_ics_events
 from getOaLocation import get_or_create_oa_location
 from HttpRequests import get_events
@@ -57,7 +58,7 @@ def import_ics(ics_url:str):
         try:
             event_title = ics_event.get('title').get('fr')
             uidExterneIcsEvent = ics_event.get("uid-externe")
-            if ics_event.get('description').get('fr') ==  0: ics_event['description']['fr'] = event_title
+            if len(ics_event.get('description').get('fr')) ==  0: ics_event['description']['fr'] = event_title
             # create event log in case of error
             eventLog = {
                     "ics-id": i,
@@ -102,14 +103,16 @@ def import_ics(ics_url:str):
         except Exception as e:
             print(f"Error: {e} \n" )
             eventLog["import_status"] = "Error processing event"
-            eventLog["error"]=  {e}
+            eventLog["error"]=  str(e)
 
         if "import_status" in eventLog : logContent.append( eventLog)
         
     with open(f"ics/import_ics_logs.txt", "a") as log_file:
         log_file.write(now + "\n")
         for dic in logContent:
-            json.dump(dic, log_file,indent=2, ensure_ascii=False) 
+            json.dump(dic, log_file,indent=2, ensure_ascii=False)
+            if "error" in dic :
+                pprint(dic)
     print(f"Checked {i+1} events from ICS URL.")
     print(f"{new_events_nbr} new events created")
 
