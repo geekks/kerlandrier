@@ -13,6 +13,8 @@ import base64
 from mistralai import Mistral
 from pydantic import BaseModel
 
+import pytz
+from datetime import datetime
 from slugify import slugify
 import argparse
 from pprint import pprint
@@ -59,20 +61,21 @@ def getMistralImageEvent(image_path:str)->Event:
         exit(1)
         
     base64_image = encode_image(image_path)
-    model = "pixtral-12b-2409"
+    model = "pixtral-large-latest"
     client = Mistral(api_key=MISTRAL_PRIVATE_API_KEY)
 
     # Define the messages for the chat
+    jour= datetime.now().strftime('%d/%m/%Y')
     messages = [
         {
             "role": "user",
             "content": [
                 {
                     "type": "text",
-                    "text": "Cette image est une affiche donnant des informations sur un évènement qui a lieu dans les prochains mois de cette année.\
+                    "text": f"Cette image est une affiche donnant des informations sur un évènement qui a lieu dans les prochains mois de cette année.\
                     Retourne moi un objet JSON contenant les information suivantes:\
                     titre,\
-                    date_debut (date de début au format ISO, sur le fuseau horaire de Paris, dans l'année 2025),\
+                    date_debut (date de début de l'évènement, qui sera dans les 12 mois à venir à partir du {jour}; elle sera au format ISO, sur le fuseau horaire de Paris)\
                     heure_debut (heure de début au format hh:mm),\
                     duree (durée de l'évenementau format hh:mm, avec 2 en durée par défaut si la durée n'est pas indisquée sur l'affiche),\
                     lieu (le nom du lieu ou l'adresse du lieu),\
@@ -138,6 +141,10 @@ if __name__ == "__main__":
         access_token = retrieve_access_token(SECRET_KEY)
         
         OaLocationUid = get_or_create_oa_location(response.lieu, access_token)
+
+        # Fixe la timezone à Paris pour prendre en compte l'heure d'été/hivert
+        timezone_paris = pytz.timezone('Europe/Paris')
+        localizedDateDeb = parse(response.date_debut).astimezone(timezone_paris).isoformat()
         eventOA= {
                     "uid-externe": "mistral-" + slugify(response.titre),
                     "title": { "fr": response.titre } ,
@@ -146,8 +153,8 @@ if __name__ == "__main__":
                     "longDescription": response.description, 
                     "timings": [
                             {
-                            "begin": response.date_debut,
-                            "end": get_end_date(parse(response.date_debut), response.duree).isoformat()
+                            "begin": localizedDateDeb,
+                            "end": get_end_date(parse(localizedDateDeb), response.duree).astimezone(timezone_paris).isoformat()
                             },
                             ]
                 }
