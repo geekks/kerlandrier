@@ -3,6 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 import gspread
 from google.oauth2.service_account import Credentials
+import datetime
+from festival_bretagne import main as festival_bretagne
+from ty_zicos import main as ty_zicos
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 SERVICE_ACCOUNT_FILE = "association-concarneau-3f7ff63d5314.json"
@@ -11,42 +14,14 @@ client = gspread.authorize(creds)
 SPREADSHEET_ID = "1Z1x7kJPdJWx5ha9R72SIihwreVV7sF7CnuVIjlArTTE"  # Extracted from your link
 
 
-base_url = "http://www.tyzicos.com"
-root_url = "/concerts-par-festivals/bretagne"
+source_1 = festival_bretagne()
+print(source_1)
 
-# GET ALL URSLS
-root_response = requests.get(base_url + root_url)
-soup = BeautifulSoup(root_response.text, 'html.parser')
-lis = soup.find_all("li", class_=re.compile("^item"))
-urls = []
-for li in lis:
-    href = li.find("a")['href']
-    urls.append(base_url + href)
-print(urls)
+source_2 = ty_zicos()
+print(source_2)
 
 
-
-# GET ALL FESTIVAL DETAILS
-festival_rows = []
-for url in urls:
-    print(url)
-    festival_response = requests.get(url)
-    festival_soup = BeautifulSoup(festival_response.text, 'html.parser')
-
-    dates = festival_soup.find_all("div", class_="date")
-    start_date = f"{dates[0].find("span", class_="day-num").text} {dates[0].find("span", class_="month").text} {dates[0].find("span", class_="year").text}"
-    end_date = f"{dates[-1].find("span", class_="day-num").text} {dates[-1].find("span", class_="month").text} {dates[-1].find("span", class_="year").text}"
-
-    title = festival_soup.find("h1").text
-
-    ville = festival_soup.find("div", class_="ville").find("a").text
-
-    website = festival_soup.find("div", class_="adress").find('a')
-    website_url = ''
-    if website is not None:
-        website_url = website['href']
-
-    festival_rows.append([title, ville, start_date, end_date, url, website_url])
+festival_rows = source_1 + source_2
 
 
 # UPDATE GOOGLE SHEET
