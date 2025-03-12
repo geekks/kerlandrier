@@ -47,7 +47,6 @@ def main():
             match = re.search(zipcode_pattern, ville)
             if match:
                 zipcode = match.group(1)
-        print(zipcode)
 
         festival_rows.append([title, ville, zipcode, start_date, end_date, url, website_url])
     

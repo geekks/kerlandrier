@@ -1,9 +1,10 @@
+import locale
 import re
 import requests
 from bs4 import BeautifulSoup
 import datetime
 
-
+locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 def main():
     print("--- TY ZICOS ---")
     base_url = "http://www.tyzicos.com"
@@ -25,8 +26,11 @@ def main():
         festival_soup = BeautifulSoup(festival_response.text, 'html.parser')
 
         dates = festival_soup.find_all("div", class_="date")
-        start_date = f"{dates[0].find("span", class_="day-num").text} {dates[0].find("span", class_="month").text} {dates[0].find("span", class_="year").text}"
-        end_date = f"{dates[-1].find("span", class_="day-num").text} {dates[-1].find("span", class_="month").text} {dates[-1].find("span", class_="year").text}"
+        start_date_str = f"{dates[0].find("span", class_="day-num").text} {dates[0].find("span", class_="month").text} {dates[0].find("span", class_="year").text}"
+        start_date = datetime.datetime.strptime(start_date_str, "%d %B %Y").strftime('%d/%m/%Y')
+
+        end_date_str = f"{dates[-1].find("span", class_="day-num").text} {dates[-1].find("span", class_="month").text} {dates[-1].find("span", class_="year").text}"
+        end_date = datetime.datetime.strptime(end_date_str, "%d %B %Y").strftime('%d/%m/%Y')
 
         title = festival_soup.find("h1").text
 
